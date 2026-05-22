@@ -45,7 +45,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install lightweight dependencies
-pip install -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 ```
 
 ### 2. Run Tests
