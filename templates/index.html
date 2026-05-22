@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentStream // Recruiter ATS Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Google Fonts: Outfit & Inter for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" role="complementary">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="logo-text">TalentStream<span class="logo-dot">.</span></span>
+                </div>
+                <div class="logo-tagline">ATS Recruiter Portal</div>
+            </div>
+            
+            <div class="sidebar-action">
+                <button id="btn-new-scan" class="btn btn-primary btn-full-width">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Candidate Scan
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <div class="nav-section-title">Candidate Pipelines</div>
+                
+                <!-- Loading State for Sidebar -->
+                <div id="sidebar-loading" class="sidebar-loading-spinner hidden">
+                    <div class="spinner-small"></div>
+                    <span>Fetching candidates...</span>
+                </div>
+                
+                <!-- Candidate List Container -->
+                <ul id="candidate-list" class="candidate-menu" role="menu">
+                    <!-- Dynamic Items Inject here -->
+                    <li class="empty-list-placeholder">No candidates scanned yet. Run a new scan to get started.</li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="pi-status">
+                    <div class="status-indicator online"></div>
+                    <span class="status-label">Raspberry Pi 2B Server</span>
+                </div>
+                <div class="app-version">v1.0.0 (Low-Memory Mode)</div>
+            </div>
+        </aside>
+        
+        <!-- Main Application Area -->
+        <main class="app-content" role="main">
+            
+            <!-- TOP HEADER -->
+            <header class="content-header">
+                <div class="header-search">
+                    <h1 id="page-title" class="page-title">Candidate Analyzer</h1>
+                </div>
+                <div class="header-profile">
+                    <span class="profile-role">Recruiter Mode</span>
+                    <div class="profile-avatar">HR</div>
+                </div>
+            </header>
+            
+            <!-- SCAN VIEW (Default Panel) -->
+            <section id="panel-scan" class="panel-section active">
+                <div class="panel-card scan-grid-container">
+                    
+                    <!-- Left Side: Inputs -->
+                    <div class="scan-inputs-form">
+                        <h2 class="section-heading">Application Parameters</h2>
+                        <p class="section-subheading">Provide the target job metrics and upload the candidate credentials to run the match audit.</p>
+                        
+                        <form id="form-ats-scan" method="POST" enctype="multipart/form-data">
+                            
+                            <div class="form-group-row">
+                                <div class="form-group flex-2">
+                                    <label for="input-job-title" class="form-label">Target Job Title</label>
+                                    <input type="text" id="input-job-title" name="job_title" class="form-control" placeholder="e.g. Software Engineering Intern" required>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="input-candidate-name" class="form-label">Candidate Name (Optional)</label>
+                                    <input type="text" id="input-candidate-name" name="candidate_name" class="form-control" placeholder="Auto-extracted if blank">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="input-job-desc" class="form-label">Job Description</label>
+                                <textarea id="input-job-desc" name="job_description" class="form-control textarea-job-desc" placeholder="Paste the full job description details and requirements here..." required></textarea>
+                            </div>
+                            
+                            <div class="file-upload-row">
+                                <div class="form-group flex-1">
+                                    <label class="form-label">Candidate Resume (PDF, TXT)</label>
+                                    <div class="drop-zone" id="drop-zone-resume">
+                                        <input type="file" id="input-resume" name="resume" accept=".pdf,.txt" class="file-input" required>
+                                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <span class="drop-zone-text">Drag & drop or <span class="highlight">browse</span></span>
+                                        <span class="file-info-label" id="file-info-resume">No file selected</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group flex-1">
+                                    <label class="form-label">Cover Letter (Optional - PDF, TXT)</label>
+                                    <div class="drop-zone" id="drop-zone-cover-letter">
+                                        <input type="file" id="input-cover-letter" name="cover_letter" accept=".pdf,.txt" class="file-input">
+                                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <span class="drop-zone-text">Drag & drop or <span class="highlight">browse</span></span>
+                                        <span class="file-info-label" id="file-info-cover-letter">No file selected</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" id="btn-submit-scan" class="btn btn-primary btn-large flex-1">
+                                    <span>Run ATS Fit Scan</span>
+                                    <div class="loader-spinner hidden" id="scan-btn-spinner"></div>
+                                </button>
+                            </div>
+                            
+                        </form>
+                    </div>
+                    
+                    <!-- Right Side: Tips & Info -->
+                    <div class="scan-instructions-sidebar">
+                        <div class="tip-card">
+                            <h3 class="tip-title">
+                                <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                Pi Server Optimization
+                            </h3>
+                            <p class="tip-text">This server parses files directly on local hardware without using cloud APIs. Large PDFs (e.g. scanned image PDFs) are not supported. Upload text-based PDFs or simple text files for maximum accuracy.</p>
+                        </div>
+                        
+                        <div class="tip-card">
+                            <h3 class="tip-title">
+                                <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                Beat the Screening Bots
+                            </h3>
+                            <p class="tip-text">ATS software values key skill density and document structure. Use this dashboard from a recruiter's view to find the exact gaps (missing keywords, structure) keeping your resume from being selected.</p>
+                        </div>
+                        
+                        <div class="sample-templates-box">
+                            <span class="box-label">Quick Job Templates</span>
+                            <div class="template-chips-container">
+                                <button type="button" class="btn btn-outline btn-xs" id="btn-template-frontend">Frontend Intern</button>
+                                <button type="button" class="btn btn-outline btn-xs" id="btn-template-python">Python Developer</button>
+                                <button type="button" class="btn btn-outline btn-xs" id="btn-template-qa">QA Analyst</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- RESULTS VIEW (Initially Hidden) -->
+            <section id="panel-results" class="panel-section">
+                
+                <!-- Candidate Meta Banner -->
+                <div class="candidate-banner-card">
+                    <div class="candidate-banner-details">
+                        <div class="candidate-badge-avatar" id="res-candidate-avatar">JD</div>
+                        <div>
+                            <div class="candidate-header-row">
+                                <h2 class="candidate-name" id="res-candidate-name">Jane Doe</h2>
+                                <span class="interview-likelihood-badge" id="res-interview-badge">High Match</span>
+                            </div>
+                            <div class="candidate-meta-row">
+                                <span id="res-candidate-title">Software Engineering Intern</span>
+                                <span class="meta-separator">&bull;</span>
+                                <span id="res-candidate-email">jane.doe@example.com</span>
+                                <span class="meta-separator">&bull;</span>
+                                <span id="res-candidate-phone">555-0199</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="candidate-banner-actions">
+                        <button id="btn-delete-candidate" class="btn btn-danger-outline btn-sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            Remove Candidate
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Metrics Bar -->
+                <div class="metrics-dashboard-grid">
+                    
+                    <!-- Score Meter -->
+                    <div class="metric-card main-score-card">
+                        <div class="metric-card-header">
+                            <span class="metric-card-title">Overall Match Score</span>
+                        </div>
+                        <div class="score-circle-container">
+                            <svg class="score-ring-svg" viewBox="0 0 120 120">
+                                <circle class="score-ring-bg" cx="60" cy="60" r="50"></circle>
+                                <circle class="score-ring-fill" id="res-score-ring" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                            </svg>
+                            <div class="score-display-value">
+                                <span class="score-number" id="res-score-number">0</span>
+                                <span class="score-pct">%</span>
+                            </div>
+                        </div>
+                        <div class="score-analysis-caption" id="res-score-caption">Analyzing match alignment...</div>
+                    </div>
+                    
+                    <!-- Interview Likelihood Panel -->
+                    <div class="metric-card likelihood-details-card">
+                        <div class="metric-card-header">
+                            <span class="metric-card-title">Interview Likelihood</span>
+                        </div>
+                        <div class="likelihood-status-box">
+                            <div class="likelihood-percent-row">
+                                <span class="likelihood-percentage-large" id="res-likelihood-pct">0%</span>
+                                <span class="likelihood-caption">Screening Threshold Probability</span>
+                            </div>
+                            <div class="likelihood-progress-bar">
+                                <div class="likelihood-progress-fill" id="res-likelihood-bar" style="width: 0%"></div>
+                            </div>
+                            <p class="likelihood-explanation-text" id="res-likelihood-desc">
+                                Based on keyword density, core competency mapping, and document structural completeness.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Resume Density & Structural Metrics -->
+                    <div class="metric-card document-meta-card">
+                        <div class="metric-card-header">
+                            <span class="metric-card-title">Document Composition</span>
+                        </div>
+                        <div class="doc-meta-stats-list">
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Word Count</span>
+                                <span class="meta-value" id="res-meta-words">0</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Quantified Impact Metrics</span>
+                                <span class="meta-value" id="res-meta-numbers">0</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Core Action Verbs</span>
+                                <span class="meta-value" id="res-meta-verbs">0</span>
+                            </div>
+                        </div>
+                        <div class="action-verbs-list-box">
+                            <span class="verbs-list-label">Identified Action Verbs:</span>
+                            <div class="verbs-chips-container" id="res-meta-verbs-list">
+                                <!-- Dynamic chips inject -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Tabs Container -->
+                <div class="results-tabs-container">
+                    <div class="tabs-nav-bar" role="tablist">
+                        <button class="tab-nav-btn active" id="tab-btn-keywords" role="tab" aria-selected="true" aria-controls="tab-panel-keywords">
+                            Keyword Fit Matrix
+                        </button>
+                        <button class="tab-nav-btn" id="tab-btn-suggestions" role="tab" aria-selected="false" aria-controls="tab-panel-suggestions">
+                            ATS Optimization suggestions
+                        </button>
+                        <button class="tab-nav-btn" id="tab-btn-coverletter" role="tab" aria-selected="false" aria-controls="tab-panel-coverletter">
+                            Cover Letter Audit
+                        </button>
+                    </div>
+                    
+                    <!-- Tab Panel 1: Keywords -->
+                    <div class="tab-content-panel active" id="tab-panel-keywords" role="tabpanel" aria-labelledby="tab-btn-keywords">
+                        <div class="keyword-filters-row">
+                            <span class="filter-label">Filter Keywords:</span>
+                            <div class="filter-buttons-group">
+                                <button type="button" class="btn btn-outline btn-xs active filter-kw-btn" data-category="all">All</button>
+                                <button type="button" class="btn btn-outline btn-xs filter-kw-btn" data-category="Technical">Technical</button>
+                                <button type="button" class="btn btn-outline btn-xs filter-kw-btn" data-category="Soft Skills">Soft Skills</button>
+                                <button type="button" class="btn btn-outline btn-xs filter-kw-btn" data-category="Business / Management">Business / Management</button>
+                            </div>
+                            <span class="keyword-ratio-label" id="res-kw-ratio">Matched: 0 / 0</span>
+                        </div>
+                        
+                        <div class="keywords-columns-grid">
+                            
+                            <!-- Matched Keywords (Left Column) -->
+                            <div class="keyword-box-card matched-box">
+                                <h3 class="keyword-box-header">
+                                    <svg class="box-header-icon text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    Matched Skills & Terms
+                                </h3>
+                                <div class="keyword-chips-container" id="res-kws-matched">
+                                    <!-- Inject chips -->
+                                </div>
+                            </div>
+                            
+                            <!-- Missing Keywords (Right Column) -->
+                            <div class="keyword-box-card missing-box">
+                                <h3 class="keyword-box-header">
+                                    <svg class="box-header-icon text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    Missing Keywords (Critical Gaps)
+                                </h3>
+                                <div class="keyword-chips-container" id="res-kws-missing">
+                                    <!-- Inject chips -->
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Panel 2: Suggestions -->
+                    <div class="tab-content-panel" id="tab-panel-suggestions" role="tabpanel" aria-labelledby="tab-btn-suggestions">
+                        <div class="suggestions-layout-grid">
+                            
+                            <!-- Detailed Recommendations List -->
+                            <div class="suggestions-main-box">
+                                <h3 class="sub-section-title">Actionable Resume Improvements</h3>
+                                <div id="res-suggestions-list" class="suggestions-list-stack">
+                                    <!-- Inject recommendation items -->
+                                </div>
+                            </div>
+                            
+                            <!-- Structure Checklist Sidebar -->
+                            <div class="suggestions-checklist-box">
+                                <h3 class="sub-section-title">Standard Section Audit</h3>
+                                <p class="sidebar-info-desc">Professional resumes require defined structural tags. If marked missing, ensure you write a clear header on its own line.</p>
+                                
+                                <div class="checklist-items-stack" id="res-checklist-stack">
+                                    <!-- Inject structure checklist -->
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Panel 3: Cover Letter -->
+                    <div class="tab-content-panel" id="tab-panel-coverletter" role="tabpanel" aria-labelledby="tab-btn-coverletter">
+                        <div id="coverletter-results-container">
+                            <!-- Show when cover letter results exist -->
+                            <div class="coverletter-overview-grid">
+                                
+                                <!-- Cover Letter Score -->
+                                <div class="cl-score-box">
+                                    <span class="cl-score-label">Cover Letter Alignment</span>
+                                    <div class="cl-score-circle">
+                                        <span class="cl-score-val" id="res-cl-score">0</span>
+                                        <span class="cl-score-max">/100</span>
+                                    </div>
+                                    <span class="cl-score-status" id="res-cl-status">Good Alignment</span>
+                                </div>
+                                
+                                <!-- Checklist & Metrics -->
+                                <div class="cl-checklist-box">
+                                    <h3 class="box-inner-title">formatting Checklist</h3>
+                                    <ul class="cl-checks-list">
+                                        <li id="res-cl-check-greeting">
+                                            <span class="check-icon"></span>
+                                            Formal Recruiter Salutation
+                                        </li>
+                                        <li id="res-cl-check-signoff">
+                                            <span class="check-icon"></span>
+                                            Formal Sign-off & Signature
+                                        </li>
+                                        <li id="res-cl-check-length">
+                                            <span class="check-icon"></span>
+                                            Length: <span id="res-cl-wordcount-label">0 words</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                            </div>
+                            
+                            <div class="coverletter-suggestions-box">
+                                <h3 class="sub-section-title">Suggestions for Cover Letter Optimization</h3>
+                                <div id="res-cl-suggestions-list" class="suggestions-list-stack">
+                                    <!-- Inject cover letter suggestions -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fallback empty state -->
+                        <div id="coverletter-empty-state" class="coverletter-empty-state-card">
+                            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                                <line x1="9" y1="11" x2="15" y2="11"></line>
+                                <line x1="9" y1="19" x2="10" y2="19"></line>
+                            </svg>
+                            <h3 class="empty-state-title">No Cover Letter Scanned</h3>
+                            <p class="empty-state-desc">You did not upload a cover letter during this scan. Uploading a custom-aligned cover letter can boost recruiter interest and match scores by demonstrating dedication.</p>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </section>
+            
+        </main>
+    </div>
+    
+    <!-- Inline static templates or variables for JS -->
+    <script>
+        // Store API route variables in window context for static serving robust paths
+        window.API_ROUTES = {
+            analyze: "{{ url_for('analyze') }}",
+            candidates: "{{ url_for('get_candidates') }}"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
