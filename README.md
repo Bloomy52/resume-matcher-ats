@@ -95,4 +95,3 @@ This project is tailored for agent-assisted development using **Google Antigravi
 Contributions are welcome! Please ensure any new features adhere to the low-memory guidelines. Avoid adding large package dependencies, and write unit tests inside `test_analyzer.py` for any new logic in `analyzer.py`.
 
 ## License
-This project is licensed under the MIT License.
