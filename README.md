@@ -1,9 +1,9 @@
-# TalentStream ATS 🚀
+# TalentStream ATS
 
 > [!IMPORTANT]
 > This project is designed to be highly lightweight and resource-efficient. It is optimized to run on low-memory servers (such as a Raspberry Pi 2B) with a strict memory footprint target of **under 50MiB**.
 
-## 🚀 Overview
+## Overview
 
 **TalentStream ATS** is an Applicant Tracking System (ATS) Recruiter Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined recruiter dashboard.
 
@@ -27,9 +27,15 @@ Key capabilities include:
 
 ---
 
-## 📋 Quick Start
+## Quick Start
 
 To run the project locally, follow these steps:
+
+### 1. Clone the GitHub Repository
+```bash
+git clone https://www.github.com/Bloomy52/talent-stream-ats-py.git
+cd talent-stream-ats-py
+```
 
 ### 1. Set Up Environment
 Create and activate a virtual environment, then install the dependencies:
@@ -57,7 +63,7 @@ Open your browser and navigate to `http://localhost:5000` to access the Recruite
 
 ---
 
-## 🤖 Agentic Workflow
+## Agentic Workflow
 
 This project is tailored for agent-assisted development using **Google Antigravity**:
 *   **Tasks & Planning:** Track tasks via standard agent task files.
@@ -66,7 +72,7 @@ This project is tailored for agent-assisted development using **Google Antigravi
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```text
 .
@@ -85,8 +91,8 @@ This project is tailored for agent-assisted development using **Google Antigravi
 
 ---
 
-## 🤝 Contributing
+## Contributing
 Contributions are welcome! Please ensure any new features adhere to the low-memory guidelines. Avoid adding large package dependencies, and write unit tests inside `test_analyzer.py` for any new logic in `analyzer.py`.
 
-## 📝 License
+## License
 This project is licensed under the MIT License.
