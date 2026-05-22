@@ -33,8 +33,8 @@ To run the project locally, follow these steps:
 
 ### 1. Clone the GitHub Repository
 ```bash
-git clone https://www.github.com/Bloomy52/talent-stream-ats-py.git
-cd talent-stream-ats-py
+git clone https://www.github.com/Bloomy52/talent-stream-ats.git
+cd talent-stream-ats
 ```
 
 ### 1. Set Up Environment
