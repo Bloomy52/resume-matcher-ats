@@ -55,11 +55,25 @@ python -m unittest test_analyzer.py
 ```
 
 ### 3. Start the Web Server
+
+#### Development Mode (Built-in Server)
 Launch the Flask development server (runs by default on host `0.0.0.0` and port `5000` to be accessible on local networks):
 ```bash
 python app.py
 ```
-Open your browser and navigate to `http://localhost:5000` to access the Recruiter Dashboard.
+
+#### Production Mode (WSGI Server - Recommended)
+To run the application in a production environment, use a WSGI server like **Gunicorn**. This handles multiple concurrent connections, manages worker processes, and is highly resource-efficient (perfect for a Raspberry Pi):
+```bash
+gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
+```
+For extremely low-memory systems (like a Raspberry Pi 2B target of `<50MiB`), you can run with 1 worker to minimize the memory footprint:
+```bash
+gunicorn --workers 1 --bind 0.0.0.0:5000 app:app
+```
+
+Once started, open your browser and navigate to `http://localhost:5000` to access the Recruiter Dashboard.
+
 
 ---
 

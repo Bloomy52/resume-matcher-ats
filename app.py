@@ -226,4 +226,7 @@ def delete_candidate(candidate_id):
 
 if __name__ == '__main__':
     # Run server on port 5000, visible on local network so they can access it on Pi
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Debug mode is disabled by default for security and low resource usage
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() in ['true', '1', 't', 'y', 'yes']
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
+
