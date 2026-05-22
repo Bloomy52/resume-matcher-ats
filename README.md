@@ -37,7 +37,7 @@ git clone https://www.github.com/Bloomy52/talent-stream-ats.git
 cd talent-stream-ats
 ```
 
-### 1. Set Up Environment
+### 2. Set Up Environment
 Create and activate a virtual environment, then install the dependencies:
 ```bash
 # Initialize virtual environment
@@ -48,13 +48,13 @@ source .venv/bin/activate
 pip install --no-cache-dir -r requirements.txt
 ```
 
-### 2. Run Tests
+### 3. Run Tests
 Verify the analyzer logic and custom calculations:
 ```bash
 python -m unittest test_analyzer.py
 ```
 
-### 3. Start the Web Server
+### 4. Start the Web Server
 
 #### Development Mode (Built-in Server)
 Launch the Flask development server (runs by default on host `0.0.0.0` and port `5000` to be accessible on local networks):
@@ -75,6 +75,8 @@ gunicorn --workers 1 --bind 0.0.0.0:5000 app:app
 Once started, open your browser and navigate to `http://localhost:5000` to access the Recruiter Dashboard.
 
 
+Alternatively, you can set up the WSGI server using `systemd`. You can find the instructions for setting up the systemd service in the `systemd_setup.md` document.
+
 ---
 
 ## Agentic Workflow
@@ -90,11 +92,14 @@ This project is tailored for agent-assisted development using **Google Antigravi
 
 ```text
 .
+├── .gitignore           # gitignore file for the repository. Includes Python Template and SQLite database
 ├── analyzer.py          # Custom NLP scoring, keyword extraction, and structural parser
 ├── app.py               # Flask backend controller, SQLite database manager, and server routes
-├── ats_database.db      # Local SQLite database (automatically initialized)
+├── ats_database.db      # Local SQLite database (automatically initialized) - not included in git repository
 ├── FUTURE_PLANS.md      # Technical roadmap for low-memory environments (Pi 2B)
+├── README.md            # Overview for the repository
 ├── requirements.txt     # Python package requirements (Flask, pypdf)
+├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
 ├── test_analyzer.py     # Comprehensive unit tests for all parser/analyzer functions
 ├── static/
 │   ├── app.js           # Client-side UI renderer, API interactions, and chart renderers
