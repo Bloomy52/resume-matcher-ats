@@ -65,3 +65,13 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 * **Low-Memory Plan:**
   1. Keep [requirements.txt](file:///home/louie/antigravity_ats/requirements.txt) restricted to only standard Flask and parsing packages.
   2. Implement all similarity logic (like Cosine Similarity) using Python's built-in `math` and `collections` libraries (as currently done in [analyzer.py:L161-209](file:///home/louie/antigravity_ats/analyzer.py#L161-209)).
+
+---
+
+## 7. [ ] CSS Print Stylesheet PDF Export
+* **Description:** 
+  Enable recruiters to export candidate analysis reports as a PDF without running heavy PDF generation engines (like WeasyPrint, ReportLab, or wkhtmltopdf) on the Raspberry Pi, which would consume too much CPU and RAM.
+* **Low-Memory Plan:**
+  1. Add a print-specific CSS block using `@media print` in [style.css](file:///home/louie/talentstream_ats/static/style.css) to hide navigation, forms, and interactive buttons, while formatting the report layout nicely for standard paper (A4/Letter).
+  2. Implement an "Export to PDF" trigger in [index.html](file:///home/louie/talentstream_ats/templates/index.html) (e.g., via `window.print()`) that prompts the browser's built-in print dialog, shifting all PDF generation work entirely to the user's browser.
+
