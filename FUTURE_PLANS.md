@@ -6,7 +6,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 1. Cloud-Offloaded AI Semantic Analysis
+## 1. [ ] Cloud-Offloaded AI Semantic Analysis
 * **Description:** 
   Transition from simple rule-based keyword matching to semantic understanding (e.g., recognizing that "GCP" matches a requirement for "cloud experience") without running heavy NLP libraries (like SpaCy or NLTK) which would instantly crash a Pi 2B's memory.
 * **Low-Memory Plan:**
@@ -17,7 +17,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 2. Browser-Side (Client) Rendering & Computation
+## 2. [ ] Browser-Side (Client) Rendering & Computation
 * **Description:** 
   Keep server CPU and RAM usage to a absolute minimum by offloading data formatting, markdown parsing, and visualization to the user's browser.
 * **Low-Memory Plan:**
@@ -27,7 +27,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 3. Streaming and Memory-Bounded File Uploads
+## 3. [ ] Streaming and Memory-Bounded File Uploads
 * **Description:** 
   Currently, the app reads the entire uploaded PDF file into RAM as bytes (`file.read()`) and passes it to `pypdf.PdfReader` ([app.py:L59-75](file:///home/louie/antigravity_ats/app.py#L59-75)). If a user uploads a large PDF, it can cause memory spikes that trigger the Linux Out-Of-Memory (OOM) killer.
 * **Low-Memory Plan:**
@@ -37,7 +37,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 4. SQLite Memory Tuning & Connection Lifecycle
+## 4. [ ] SQLite Memory Tuning & Connection Lifecycle
 * **Description:** 
   SQLite is fast, but open connections and large caches can consume valuable RAM. We must tune SQLite to run in "micro-memory" mode.
 * **Low-Memory Plan:**
@@ -49,7 +49,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 5. Single-Threaded, Low-Footprint WSGI Runner
+## 5. [ ] Single-Threaded, Low-Footprint WSGI Runner
 * **Description:** 
   Standard development servers are inefficient, but running multi-worker Gunicorn servers creates several child processes, each consuming ~25-30MiB of RAM, easily exceeding the 50MiB budget.
 * **Low-Memory Plan:**
@@ -59,7 +59,7 @@ Because the target deployment platform is a **Raspberry Pi 2B** (which has stric
 
 ---
 
-## 6. Strict "Vanilla Python" Rule (No Heavy Analytical Packages)
+## 6. [x] Strict "Vanilla Python" Rule (No Heavy Analytical Packages)
 * **Description:** 
   Avoid importing heavy data science libraries like `pandas`, `numpy`, `scikit-learn`, `nltk`, or `spacy`, which can push memory usage over 150-500MiB.
 * **Low-Memory Plan:**
