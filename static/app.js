@@ -107,7 +107,15 @@ const elements = {
     resClCheckGreeting: document.getElementById('res-cl-check-greeting'),
     resClCheckSignoff: document.getElementById('res-cl-check-signoff'),
     resClWordcountLabel: document.getElementById('res-cl-wordcount-label'),
-    resClSuggestionsList: document.getElementById('res-cl-suggestions-list')
+    resClSuggestionsList: document.getElementById('res-cl-suggestions-list'),
+    
+    // Parser Toggles
+    parserOptionLocal: document.getElementById('parser-option-local'),
+    parserOptionGemini: document.getElementById('parser-option-gemini'),
+    radioParserLocal: document.getElementById('radio-parser-local'),
+    radioParserGemini: document.getElementById('radio-parser-gemini'),
+    geminiSublabel: document.getElementById('gemini-sublabel'),
+    resCandidateParser: document.getElementById('res-candidate-parser')
 };
 
 // Event Listeners on Load
@@ -147,6 +155,10 @@ function initApp() {
             renderKeywords();
         });
     });
+
+    // 8. Parser UI setup
+    setupParserToggles();
+    checkGeminiAvailability();
 }
 
 // Sidebar & Candidate list Management
@@ -408,6 +420,18 @@ function renderAnalysisResults() {
     elements.resCandidateTitle.textContent = c.job_title;
     elements.resCandidateEmail.textContent = c.email || 'N/A';
     elements.resCandidatePhone.textContent = c.phone || 'N/A';
+    
+    // Parser Used Badge
+    if (elements.resCandidateParser) {
+        const parser = analysis.parser_used || 'local';
+        if (parser === 'gemini') {
+            elements.resCandidateParser.textContent = 'Google Gemini AI';
+            elements.resCandidateParser.className = 'parser-used-badge badge-gemini';
+        } else {
+            elements.resCandidateParser.textContent = 'Local NLP';
+            elements.resCandidateParser.className = 'parser-used-badge badge-local';
+        }
+    }
     
     // Likelihood Badge
     elements.resInterviewBadge.className = 'interview-likelihood-badge';
@@ -674,4 +698,63 @@ function escapeHTML(str) {
             '"': '&quot;'
         }[tag] || tag)
     );
+}
+
+function setupParserToggles() {
+    const localOpt = elements.parserOptionLocal;
+    const geminiOpt = elements.parserOptionGemini;
+    
+    if (localOpt && geminiOpt) {
+        localOpt.addEventListener('click', () => {
+            if (elements.radioParserLocal) {
+                elements.radioParserLocal.checked = true;
+                localOpt.classList.add('selected');
+                geminiOpt.classList.remove('selected');
+            }
+        });
+        
+        geminiOpt.addEventListener('click', () => {
+            if (geminiOpt.classList.contains('disabled')) return;
+            if (elements.radioParserGemini) {
+                elements.radioParserGemini.checked = true;
+                geminiOpt.classList.add('selected');
+                localOpt.classList.remove('selected');
+            }
+        });
+    }
+}
+
+async function checkGeminiAvailability() {
+    try {
+        const response = await fetch(window.API_ROUTES.config);
+        if (!response.ok) throw new Error("Config fetch failed");
+        
+        const data = await response.json();
+        if (!data.gemini_enabled) {
+            disableGeminiUI();
+        }
+    } catch (err) {
+        console.error("Error checking Gemini status, disabling toggle:", err);
+        disableGeminiUI();
+    }
+}
+
+function disableGeminiUI() {
+    if (elements.parserOptionGemini) {
+        elements.parserOptionGemini.classList.add('disabled');
+        elements.parserOptionGemini.classList.remove('selected');
+    }
+    if (elements.radioParserGemini) {
+        elements.radioParserGemini.disabled = true;
+        elements.radioParserGemini.checked = false;
+    }
+    if (elements.radioParserLocal) {
+        elements.radioParserLocal.checked = true;
+    }
+    if (elements.parserOptionLocal) {
+        elements.parserOptionLocal.classList.add('selected');
+    }
+    if (elements.geminiSublabel) {
+        elements.geminiSublabel.textContent = "API Key Missing (Disabled)";
+    }
 }
