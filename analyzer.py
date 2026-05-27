@@ -1,6 +1,10 @@
 import re
 import math
 import io
+import os
+import json
+import urllib.request
+import urllib.parse
 from pypdf import PdfReader
 
 # Common English stopwords to clean text without loading large NLP packages
@@ -317,7 +321,160 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
         "suggestions": suggestions
     }
 
-def get_ats_analysis(resume_text, job_desc_text, cover_letter_text=None):
+def _analyze_with_gemini(resume_text, job_desc_text, cover_letter_text, api_key):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    prompt = (
+        "You are an expert Applicant Tracking System (ATS) auditor. Analyze the following candidate's resume "
+        "against the provided job description. If a cover letter is provided, analyze it as well.\n\n"
+        "### Job Description:\n"
+        f"{job_desc_text}\n\n"
+        "### Resume:\n"
+        f"{resume_text}\n\n"
+    )
+    if cover_letter_text:
+        prompt += (
+            "### Cover Letter:\n"
+            f"{cover_letter_text}\n\n"
+        )
+    else:
+        prompt += "No cover letter was provided.\n\n"
+        
+    prompt += (
+        "Perform a thorough match analysis:\n"
+        "1. Calculate a realistic Match Score (0 to 100) based on how well the candidate's skills and experience align with the job description. Do not be overly generous—scoring should reflect actual alignment.\n"
+        "2. Identify technical, soft, and business keywords that are matched, and those that are missing but requested.\n"
+        "3. Evaluate the resume structure, word count, metrics (numbers indicating impact), and action verbs.\n"
+        "4. If a cover letter is provided, analyze its layout, greeting, signoff, length, and keyword overlap, and score it out of 100.\n"
+        "5. Provide actionable suggestions for improving the resume (and cover letter, if provided).\n\n"
+        "Provide your output exactly in the requested JSON schema structure."
+    )
+    
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "match_score": {"type": "INTEGER"},
+            "interview_likelihood": {"type": "STRING"},
+            "likelihood_percentage": {"type": "INTEGER"},
+            "word_count": {"type": "INTEGER"},
+            "metrics_found": {"type": "INTEGER"},
+            "action_verbs": {
+                "type": "ARRAY",
+                "items": {"type": "STRING"}
+            },
+            "sections_found": {
+                "type": "ARRAY",
+                "items": {"type": "STRING"}
+            },
+            "sections_missing": {
+                "type": "ARRAY",
+                "items": {"type": "STRING"}
+            },
+            "keywords": {
+                "type": "OBJECT",
+                "properties": {
+                    "matched": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "keyword": {"type": "STRING"},
+                                "category": {"type": "STRING"}
+                            },
+                            "required": ["keyword", "category"]
+                        }
+                    },
+                    "missing": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "keyword": {"type": "STRING"},
+                                "category": {"type": "STRING"}
+                            },
+                            "required": ["keyword", "category"]
+                        }
+                    },
+                    "match_ratio": {"type": "STRING"}
+                },
+                "required": ["matched", "missing", "match_ratio"]
+            },
+            "suggestions": {
+                "type": "ARRAY",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "type": {"type": "STRING"},
+                        "priority": {"type": "STRING"},
+                        "message": {"type": "STRING"}
+                    },
+                    "required": ["type", "priority", "message"]
+                }
+            },
+            "cover_letter": {
+                "type": "OBJECT",
+                "properties": {
+                    "word_count": {"type": "INTEGER"},
+                    "cl_score": {"type": "INTEGER"},
+                    "has_greeting": {"type": "BOOLEAN"},
+                    "has_signoff": {"type": "BOOLEAN"},
+                    "keyword_overlap": {"type": "INTEGER"},
+                    "length_status": {"type": "STRING"},
+                    "suggestions": {
+                        "type": "ARRAY",
+                        "items": {"type": "STRING"}
+                    }
+                },
+                "required": ["word_count", "cl_score", "has_greeting", "has_signoff", "keyword_overlap", "length_status", "suggestions"]
+            }
+        },
+        "required": [
+            "match_score",
+            "interview_likelihood",
+            "likelihood_percentage",
+            "word_count",
+            "metrics_found",
+            "action_verbs",
+            "sections_found",
+            "sections_missing",
+            "keywords",
+            "suggestions"
+        ]
+    }
+    
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": schema
+        }
+    }
+    
+    req_body = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    req = urllib.request.Request(url, data=req_body, headers=headers, method="POST")
+    
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            res_data = response.read().decode("utf-8")
+            res_json = json.loads(res_data)
+            content_text = res_json['candidates'][0]['content']['parts'][0]['text']
+            parsed_analysis = json.loads(content_text)
+            parsed_analysis["parser_used"] = "gemini"
+            return parsed_analysis
+    except Exception as e:
+        print(f"Error calling Gemini API: {e}")
+        return None
+
+def get_ats_analysis(resume_text, job_desc_text, cover_letter_text=None, parser_mode='local'):
     """
     Runs the complete ATS analysis pipeline.
     Combines text cleanups, custom TF-IDF similarity, keyword overlap, structural checks,
@@ -327,6 +484,17 @@ def get_ats_analysis(resume_text, job_desc_text, cover_letter_text=None):
         return {"error": "Resume text is empty"}
     if not job_desc_text or not job_desc_text.strip():
         return {"error": "Job description is empty"}
+        
+    if parser_mode == 'gemini':
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if api_key:
+            gemini_result = _analyze_with_gemini(resume_text, job_desc_text, cover_letter_text, api_key)
+            if gemini_result:
+                return gemini_result
+            else:
+                print("Gemini analysis failed. Falling back to local engine.")
+        else:
+            print("Gemini API key missing. Falling back to local engine.")
         
     # 1. Tokenize both documents
     resume_tokens = tokenize(resume_text)
@@ -432,7 +600,7 @@ def get_ats_analysis(resume_text, job_desc_text, cover_letter_text=None):
             "message": "Start your experience bullet points with strong action verbs (e.g., *designed*, *spearheaded*, *automated*, *optimized*) instead of passive language like 'responsible for'."
         })
         
-    return {
+    res = {
         "match_score": match_score,
         "interview_likelihood": interview_likelihood,
         "likelihood_percentage": likelihood_percentage,
@@ -447,5 +615,15 @@ def get_ats_analysis(resume_text, job_desc_text, cover_letter_text=None):
             "match_ratio": f"{len(matched_kws)} / {total_kws}" if total_kws > 0 else "0 / 0"
         },
         "cover_letter": cl_metrics,
-        "suggestions": suggestions
+        "suggestions": suggestions,
+        "parser_used": "local"
     }
+
+    if parser_mode == 'gemini':
+        res["suggestions"].insert(0, {
+            "type": "system",
+            "priority": "High",
+            "message": "Notice: Gemini API key is missing or the call failed. Fell back to Local NLP matching."
+        })
+
+    return res
