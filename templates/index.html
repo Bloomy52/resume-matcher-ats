@@ -133,6 +133,26 @@
                                 </div>
                             </div>
                             
+                            <div class="form-group">
+                                <label class="form-label">Analysis Parser</label>
+                                <div class="parser-toggle-container">
+                                    <div class="parser-option selected" id="parser-option-local">
+                                        <input type="radio" id="radio-parser-local" name="parser_mode" value="local" checked>
+                                        <label for="radio-parser-local" class="parser-label-content">
+                                            <strong>Local NLP</strong>
+                                            <span class="parser-sublabel">Fast, private & offline</span>
+                                        </label>
+                                    </div>
+                                    <div class="parser-option" id="parser-option-gemini">
+                                        <input type="radio" id="radio-parser-gemini" name="parser_mode" value="gemini">
+                                        <label for="radio-parser-gemini" class="parser-label-content">
+                                            <strong>Google Gemini AI</strong>
+                                            <span class="parser-sublabel" id="gemini-sublabel">Deep semantic insights (API)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="form-actions">
                                 <button type="submit" id="btn-submit-scan" class="btn btn-primary btn-large flex-1">
                                     <span>Run ATS Fit Scan</span>
@@ -191,6 +211,8 @@
                                 <span id="res-candidate-email">jane.doe@example.com</span>
                                 <span class="meta-separator">&bull;</span>
                                 <span id="res-candidate-phone">555-0199</span>
+                                <span class="meta-separator">&bull;</span>
+                                <span class="parser-used-badge" id="res-candidate-parser">Local NLP</span>
                             </div>
                         </div>
                     </div>
@@ -432,7 +454,8 @@
         // Store API route variables in window context for static serving robust paths
         window.API_ROUTES = {
             analyze: "{{ url_for('analyze') }}",
-            candidates: "{{ url_for('get_candidates') }}"
+            candidates: "{{ url_for('get_candidates') }}",
+            config: "{{ url_for('get_config') }}"
         };
     </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
