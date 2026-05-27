@@ -1447,3 +1447,92 @@ body {
     max-width: 450px;
     line-height: 1.5;
 }
+
+/* Parser Mode Toggle Toggles */
+.parser-toggle-container {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+.parser-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.parser-option input[type="radio"] {
+    display: none; /* Hide standard radio input, card itself acts as the selectable toggle */
+}
+
+.parser-option:hover:not(.disabled) {
+    border-color: var(--border-hover);
+    background-color: rgba(99, 102, 241, 0.04);
+}
+
+.parser-option.selected {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+}
+
+.parser-option.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: rgba(17, 24, 39, 0.3);
+    border-color: var(--border-color);
+}
+
+.parser-label-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: inherit;
+    width: 100%;
+}
+
+.parser-label-content strong {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+}
+
+.parser-sublabel {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.parser-option.disabled .parser-sublabel {
+    color: var(--color-danger);
+}
+
+/* Parser Used Badge in Candidate Meta Banner */
+.parser-used-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.parser-used-badge.badge-local {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.parser-used-badge.badge-gemini {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    color: #a78bfa; /* Violet light */
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.15);
+}
