@@ -106,6 +106,7 @@ const elements = {
     resClStatus: document.getElementById('res-cl-status'),
     resClCheckGreeting: document.getElementById('res-cl-check-greeting'),
     resClCheckSignoff: document.getElementById('res-cl-check-signoff'),
+    resClCheckLength: document.getElementById('res-cl-check-length'),
     resClWordcountLabel: document.getElementById('res-cl-wordcount-label'),
     resClSuggestionsList: document.getElementById('res-cl-suggestions-list'),
     
@@ -672,6 +673,7 @@ function renderCoverLetterResult() {
 }
 
 function updateClCheckItem(el, isPass) {
+    if (!el) return;
     if (isPass) {
         el.className = 'check-pass';
     } else {
