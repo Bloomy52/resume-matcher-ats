@@ -117,6 +117,17 @@ class TestAnalyzer(unittest.TestCase):
         self.assertGreater(cl_analysis["cl_score"], 70)
         self.assertEqual(len(cl_analysis["suggestions"]), 0) # No suggestions needed for a good letter
 
+    def test_fuzzy_matching(self):
+        job = "Looking for a developer with python, docker, and PostgreSQL experience."
+        resume = "Experienced developers specializing in pyhton, dockers, and postgres."
+        
+        matched, missing = get_matching_keywords(resume, job)
+        matched_words = [item["keyword"] for item in matched]
+        
+        self.assertIn("python", matched_words)
+        self.assertIn("docker", matched_words)
+        self.assertIn("postgresql", matched_words)
+
     def test_get_ats_analysis(self):
         job = "Senior Python Developer with AWS cloud skills."
         resume = "Python Developer with AWS experience. Standard Education and Skills."

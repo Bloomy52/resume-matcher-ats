@@ -5,6 +5,7 @@ import os
 import json
 import urllib.request
 import urllib.parse
+from difflib import SequenceMatcher
 from pypdf import PdfReader
 
 # Common English stopwords to clean text without loading large NLP packages
@@ -92,6 +93,40 @@ def get_ngrams(tokens, n=2):
         ngrams.append(" ".join(tokens[i:i+n]))
     return ngrams
 
+def is_fuzzy_match(keyword, text, threshold=0.85):
+    """
+    Checks if a keyword has a fuzzy match in the text.
+    First uses a fast-path substring check. If not found, falls back
+    to comparing candidate words/phrases using SequenceMatcher.
+    """
+    if not keyword or not text:
+        return False
+        
+    # Fast path: exact string inclusion
+    if keyword in text:
+        return True
+        
+    # Tokenize the text and strip punctuation to run local sequence matching
+    raw_words = text.split()
+    words = [re.sub(r'[^\w\s-]', '', w) for w in raw_words]
+    words = [w for w in words if w]
+    
+    kw_words = keyword.split()
+    n = len(kw_words)
+    
+    if n == 0 or len(words) < n:
+        return False
+        
+    # Slide a window of size 'n' across the text
+    for i in range(len(words) - n + 1):
+        phrase = " ".join(words[i:i+n])
+        # Calculate ratio
+        ratio = SequenceMatcher(None, phrase, keyword).ratio()
+        if ratio >= threshold:
+            return True
+            
+    return False
+
 def get_matching_keywords(resume_text, job_desc_text):
     """
     Identifies skills mentioned in the job description and checks if they are in the resume.
@@ -133,13 +168,7 @@ def get_matching_keywords(resume_text, job_desc_text):
     missing = []
     
     for kw in found_keywords:
-        # Simple string inclusion check for robustness
-        # E.g. "python" in "experience with python programming"
-        # For multi-word keywords, we check full inclusion. For single-word, we ensure word boundaries.
-        if " " in kw:
-            isPresent = kw in resume_cleaned
-        else:
-            isPresent = re.search(r'\b' + re.escape(kw) + r'\b', resume_cleaned) is not None
+        isPresent = is_fuzzy_match(kw, resume_cleaned, threshold=0.80)
             
         category = "Other"
         if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering"]:
