@@ -322,7 +322,7 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
     }
 
 def _analyze_with_gemini(resume_text, job_desc_text, cover_letter_text, api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_key}"
     
     prompt = (
         "You are an expert Applicant Tracking System (ATS) auditor. Analyze the following candidate's resume "
