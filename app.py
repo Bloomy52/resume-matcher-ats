@@ -77,6 +77,13 @@ def extract_text_from_file(file):
 def index():
     return render_template('index.html')
 
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    gemini_enabled = bool(os.environ.get('GEMINI_API_KEY'))
+    return jsonify({
+        "gemini_enabled": gemini_enabled
+    })
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
     # 1. Check requirements
@@ -96,6 +103,8 @@ def analyze():
         job_lines = [l.strip() for l in job_desc.split('\n') if l.strip()]
         job_title = job_lines[0][:50] if job_lines else "Target Job Position"
 
+    parser_mode = request.form.get('parser_mode', 'local').strip().lower()
+
     # 2. Extract texts
     resume_text = extract_text_from_file(resume_file)
     if not resume_text:
@@ -106,7 +115,7 @@ def analyze():
         cover_letter_text = extract_text_from_file(cover_letter_file)
         
     # 3. Analyze
-    analysis = get_ats_analysis(resume_text, job_desc, cover_letter_text)
+    analysis = get_ats_analysis(resume_text, job_desc, cover_letter_text, parser_mode=parser_mode)
     if "error" in analysis:
         return jsonify(analysis), 400
         
