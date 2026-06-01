@@ -31,6 +31,11 @@ const TEMPLATES = {
 
 // DOM Elements
 const elements = {
+    btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
+    btnCloseSidebar: document.getElementById('btn-close-sidebar'),
+    sidebarBackdrop: document.getElementById('sidebar-backdrop'),
+    appContainer: document.querySelector('.app-container'),
+    
     btnNewScan: document.getElementById('btn-new-scan'),
     candidateList: document.getElementById('candidate-list'),
     sidebarLoading: document.getElementById('sidebar-loading'),
@@ -144,8 +149,21 @@ function initApp() {
     elements.btnTemplateQA.addEventListener('click', () => fillTemplate('qa'));
     
     // 6. Navigation Control
-    elements.btnNewScan.addEventListener('click', showScanPanel);
+    elements.btnNewScan.addEventListener('click', () => {
+        showScanPanel();
+        closeMobileSidebar();
+    });
     elements.btnDeleteCandidate.addEventListener('click', handleDeleteActiveCandidate);
+    
+    if (elements.btnToggleSidebar) {
+        elements.btnToggleSidebar.addEventListener('click', openMobileSidebar);
+    }
+    if (elements.btnCloseSidebar) {
+        elements.btnCloseSidebar.addEventListener('click', closeMobileSidebar);
+    }
+    if (elements.sidebarBackdrop) {
+        elements.sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+    }
     
     // 7. Keyword Filter Buttons
     elements.filterKwButtons.forEach(btn => {
@@ -224,6 +242,7 @@ async function loadCandidateDetail(id) {
         state.currentAnalysis = details;
         showResultsPanel();
         renderAnalysisResults();
+        closeMobileSidebar();
     } catch (error) {
         alert("Error loading candidate analysis details.");
         console.error(error);
@@ -367,6 +386,7 @@ async function handleDeleteActiveCandidate() {
         // Reload candidates and redirect to Scan view
         await loadCandidates();
         showScanPanel();
+        closeMobileSidebar();
     } catch (error) {
         alert("Error deleting candidate record.");
         console.error(error);
@@ -758,5 +778,18 @@ function disableGeminiUI() {
     }
     if (elements.geminiSublabel) {
         elements.geminiSublabel.textContent = "API Key Missing (Disabled)";
+    }
+}
+
+// Mobile sidebar helpers
+function openMobileSidebar() {
+    if (elements.appContainer) {
+        elements.appContainer.classList.add('sidebar-open');
+    }
+}
+
+function closeMobileSidebar() {
+    if (elements.appContainer) {
+        elements.appContainer.classList.remove('sidebar-open');
     }
 }

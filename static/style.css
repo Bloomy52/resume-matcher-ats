@@ -79,7 +79,32 @@ body {
 .logo-container {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.logo-branding {
+    display: flex;
+    align-items: center;
     gap: 12px;
+}
+
+.btn-sidebar-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.btn-sidebar-close:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .logo-icon {
@@ -279,6 +304,43 @@ body {
     background-color: rgba(17, 24, 39, 0.3);
     backdrop-filter: blur(10px);
     z-index: 10;
+}
+
+.header-title-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-menu-toggle {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.btn-menu-toggle:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
 }
 
 .page-title {
@@ -1535,4 +1597,176 @@ body {
     color: #a78bfa; /* Violet light */
     border: 1px solid rgba(139, 92, 246, 0.4);
     box-shadow: 0 0 8px rgba(139, 92, 246, 0.15);
+}
+
+/* ==========================================
+   Responsive Tablet & Mobile Styles (< 1368px)
+   ========================================== */
+@media (max-width: 1367px) {
+    /* Menu / Close Button Displays */
+    .btn-menu-toggle {
+        display: inline-flex;
+    }
+    
+    .btn-sidebar-close {
+        display: inline-flex;
+    }
+    
+    /* Reposition app-sidebar as hidden slide-out drawer */
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        width: 300px;
+        height: 100vh;
+        z-index: 100;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+        transition: left var(--transition-normal);
+    }
+    
+    /* Open States */
+    .sidebar-open .app-sidebar {
+        left: 0;
+    }
+    
+    .sidebar-open .sidebar-backdrop {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Reset layout container to scroll natively */
+    body {
+        height: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .app-container {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        display: block;
+    }
+    
+    .app-content {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+    
+    /* Header layout adjustments */
+    .content-header {
+        position: sticky;
+        top: 0;
+        padding: 0 16px;
+        background-color: var(--bg-secondary);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .profile-role {
+        display: none; /* Hide recruiter mode badge to fit smaller devices */
+    }
+    
+    /* Main Layout Sections */
+    .panel-section {
+        padding: 16px;
+    }
+    
+    /* Parameters scanning form grids */
+    .scan-grid-container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .form-group-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-group.flex-1,
+    .form-group.flex-2 {
+        flex: none;
+        width: 100%;
+    }
+    
+    .file-upload-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .parser-toggle-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    /* Results candidate banner */
+    .candidate-banner-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .candidate-banner-details {
+        width: 100%;
+    }
+    
+    .candidate-meta-row {
+        flex-wrap: wrap;
+        gap: 6px 10px;
+    }
+    
+    .candidate-banner-actions {
+        width: 100%;
+    }
+    
+    .candidate-banner-actions .btn {
+        width: 100%;
+    }
+    
+    /* Score & Metrics Dashboard */
+    .metrics-dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    /* Tabs navigation scrollbar setup */
+    .tabs-nav-bar {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        gap: 0;
+    }
+    
+    .tab-nav-btn {
+        flex-shrink: 0;
+        padding: 14px 16px;
+        font-size: 12px;
+    }
+    
+    /* Keywords splits stacking */
+    .keywords-columns-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .keyword-box-card {
+        height: 280px;
+    }
+    
+    /* Suggestions splits stacking */
+    .suggestions-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .suggestions-checklist-box {
+        align-self: stretch;
+    }
+    
+    /* Cover letter audit splits */
+    .coverletter-overview-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }
