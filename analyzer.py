@@ -26,6 +26,19 @@ STOPWORDS = {
     "yourselves", "will", "shall", "can", "may", "has", "have", "had", "having", "its", "include", "includes", "including"
 }
 
+# Add calendar, seasonal, and academic terms to STOPWORDS to avoid them being treated as fallback skills
+STOPWORDS.update({
+    "summer", "winter", "fall", "autumn",
+    "january", "february", "march", "april", "june", "july", "august", "september", "october", "november", "december",
+    "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
+    "semester", "semesters", "quarter", "quarters", "term", "terms", "session", "sessions", "academic",
+    "year", "years", "month", "months", "week", "weeks", "day", "days",
+    "daily", "weekly", "monthly", "yearly", "annual", "annually",
+    "intern", "interns", "internship", "internships", "co-op", "coops", "cooperative",
+    "graduate", "graduates", "graduating", "graduation", "graduated", "expected", "class", "degree", "degrees", "conferral", "conferred"
+})
+
+
 # Predefined skill taxonomies for categorization
 TECH_SKILLS = {
     "python", "javascript", "typescript", "java", "cpp", "csharp", "ruby", "php", "swift", "kotlin", "rust", "go", "golang",
@@ -65,10 +78,33 @@ def extract_text_from_pdf(pdf_bytes):
         print(f"Error extracting PDF: {e}")
         return ""
 
-def clean_and_normalize(text):
-    """Cleans text by converting to lowercase and replacing special language terms."""
+def strip_graduation_dates(text):
+    """Strips graduation date patterns, class of years, and standard date formats."""
     if not text:
         return ""
+    
+    # Patterns to match graduation/expected graduation dates and years
+    patterns = [
+        # Expected graduation / Graduation Date: May 2025 / Spring 2024
+        r'\b(?:expected\s+)?graduat(?:e|ing|ion|ed|es)\s*(?:date)?\s*(?:in|of|by|:|-)?\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|spring|summer|fall|winter|autumn)[a-z]*\s*)?(?:(?:19|20)?\d{2})\b',
+        # Class of 2024 / 24
+        r'\bclass\s+of\s+(?:19|20)?\d{2}\b',
+        # Date patterns like 05/2024, 12-2025
+        r'\b\d{1,2}[-/]\d{2,4}\b'
+    ]
+    
+    cleaned = text
+    for pattern in patterns:
+        cleaned = re.sub(pattern, ' ', cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+def clean_and_normalize(text):
+    """Cleans text by converting to lowercase, stripping graduation dates, and replacing special language terms."""
+    if not text:
+        return ""
+    # Strip graduation date patterns before normalizing
+    text = strip_graduation_dates(text)
+    
     # Normalize programming languages/terms with special chars
     text = text.lower()
     text = text.replace("c++", "cpp")
@@ -77,6 +113,67 @@ def clean_and_normalize(text):
     text = text.replace("node.js", "nodejs")
     return text
 
+def has_spring_framework(text):
+    """
+    Returns True if the text contains the word 'spring' in a context that is NOT
+    seasonal or academic (e.g., not 'Spring 2024', 'Spring semester', 'Spring internship').
+    """
+    if not text:
+        return False
+    # Find all occurrences of word 'spring'
+    matches = list(re.finditer(r'\bspring\b', text, re.IGNORECASE))
+    if not matches:
+        return False
+        
+    seasonal_patterns = [
+        # Season + Year: spring 2024, spring '24, spring 24, spring of 2024, spring of 24
+        r'\bspring\s*(?:of\s*)?(?:19|20)?\d{2}\b',
+        # Season + academic term: spring semester, spring term, spring quarter, spring break, spring cohort, spring intake
+        r'\bspring\s*(?:semester|term|quarter|session|break|vacation|cohort|intake|admission|placement|co-op|coop)\b',
+        # Academic term + Season: semester spring, term spring, quarter spring, class of spring
+        r'\b(?:semester|term|quarter|session|break|vacation|cohort|intake|admission|placement|class|co-op|coop)\s+(?:of\s+)?spring\b',
+        # Academic/Season ranges: fall/spring, spring/summer, spring-summer, etc.
+        r'\b(?:semester|term|quarter|session|break|vacation|cohort|intake|admission|placement|class|co-op|coop)\s+[-/]\s*spring\b',
+        r'\bspring\s*[-/]\s*(?:summer|fall|winter|autumn)\b',
+        r'\b(?:summer|fall|winter|autumn)\s*[-/]\s*spring\b',
+        # Graduation context: graduation in spring, graduate in spring, graduating in spring
+        r'\bgraduat(?:e|ing|ion|es)\s+(?:in\s+)?(?:the\s+)?spring\b',
+        r'\bspring\s+graduat(?:e|ing|ion|es)\b',
+        # Internship/Hiring cycle context: spring intern, spring internship, spring co-op
+        r'\bspring\s+(?:intern|internship|co-op|coop|placement|recruit|recruiting|hiring|cycle|opportunity|opportunities)\b',
+        r'\b(?:intern|internship|co-op|coop|placement|recruit|recruiting|hiring|cycle|opportunity|opportunities)\s+(?:for\s+)?(?:the\s+)?spring\b',
+        # Start/Begin context: start in spring, begin in spring, starting spring 2024
+        r'\b(?:begin|begins|beginning|start|starts|starting)\s+(?:in\s+)?(?:the\s+)?spring\b',
+        r'\b(?:begin|begins|beginning|start|starts|starting)\s+spring\s+(?:19|20)?\d{2}\b'
+    ]
+    
+    # Check if at least one occurrence is NOT seasonal/academic.
+    for m in matches:
+        start, end = m.start(), m.end()
+        # Extract a window around this match (60 chars before and after)
+        window_start = max(0, start - 60)
+        window_end = min(len(text), end + 60)
+        window = text[window_start:window_end].lower()
+        
+        # Center of the window relative to window_start
+        center_idx = start - window_start
+        
+        is_seasonal = False
+        for pattern in seasonal_patterns:
+            for pm in re.finditer(pattern, window):
+                # If the pattern match covers our target 'spring' (index center_idx to center_idx + 6)
+                if pm.start() <= center_idx and pm.end() >= (center_idx + 6):
+                    is_seasonal = True
+                    break
+            if is_seasonal:
+                break
+                
+        if not is_seasonal:
+            # We found an occurrence of 'spring' that is NOT seasonal/academic
+            return True
+            
+    return False
+
 def tokenize(text):
     """Splits text into lowercase alphabetic/numeric tokens, filtering out stopwords."""
     cleaned = clean_and_normalize(text)
@@ -84,7 +181,14 @@ def tokenize(text):
         return []
     # Match words: letters, numbers, and dashes inside words
     words = re.findall(r'\b[a-z0-9]+(?:\-[a-z0-9]+)*\b', cleaned)
-    return [w for w in words if w not in STOPWORDS and len(w) > 1]
+    # Filter out numeric-only tokens, stopwords, and short words
+    tokens = [w for w in words if w not in STOPWORDS and len(w) > 1 and not w.isdigit()]
+    
+    # Filter out seasonal/academic 'spring'
+    if "spring" in tokens and not has_spring_framework(text):
+        tokens = [t for t in tokens if t != "spring"]
+        
+    return tokens
 
 def get_ngrams(tokens, n=2):
     """Generates n-grams from a list of tokens."""
@@ -168,7 +272,10 @@ def get_matching_keywords(resume_text, job_desc_text):
     missing = []
     
     for kw in found_keywords:
-        isPresent = is_fuzzy_match(kw, resume_cleaned, threshold=0.80)
+        if kw == "spring":
+            isPresent = has_spring_framework(resume_text)
+        else:
+            isPresent = is_fuzzy_match(kw, resume_cleaned, threshold=0.80)
             
         category = "Other"
         if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering"]:

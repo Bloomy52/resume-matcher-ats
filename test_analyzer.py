@@ -7,7 +7,8 @@ from analyzer import (
     get_matching_keywords,
     analyze_resume_structure,
     analyze_cover_letter,
-    get_ats_analysis
+    get_ats_analysis,
+    has_spring_framework
 )
 
 class TestAnalyzer(unittest.TestCase):
@@ -138,6 +139,91 @@ class TestAnalyzer(unittest.TestCase):
         self.assertIn("keywords", result)
         self.assertIn("suggestions", result)
         self.assertGreaterEqual(result["match_score"], 50)
+
+    def test_has_spring_framework(self):
+        # Framework cases
+        self.assertTrue(has_spring_framework("Looking for a Java developer with Spring Boot experience."))
+        self.assertTrue(has_spring_framework("Experience with Spring, Hibernate, and Struts."))
+        self.assertTrue(has_spring_framework("We are hiring for our Spring 2025 cohort. Candidates must have Spring Framework experience."))
+        self.assertTrue(has_spring_framework("Spring Boot Developer for a Spring 2024 project"))
+        
+        # Seasonal/academic cases
+        self.assertFalse(has_spring_framework("Graduated in Spring 2024."))
+        self.assertFalse(has_spring_framework("Spring semester 2023: teaching assistant."))
+        self.assertFalse(has_spring_framework("Looking for an intern for the Spring term."))
+        self.assertFalse(has_spring_framework("Spring/Summer 2024 co-op"))
+        self.assertFalse(has_spring_framework("Hiring a Spring Intern"))
+
+    def test_spring_keyword_matching_and_extraction(self):
+        # Case 1: Job description mentions Spring 2024 (seasonal). Spring should NOT be extracted as a keyword.
+        job_desc = "We are hiring interns for the Spring 2024 term. Basic knowledge of Python is required."
+        resume = "Experienced Python developer."
+        
+        matched, missing = get_matching_keywords(resume, job_desc)
+        matched_words = [item["keyword"] for item in matched]
+        missing_words = [item["keyword"] for item in missing]
+        
+        self.assertNotIn("spring", matched_words)
+        self.assertNotIn("spring", missing_words)
+        self.assertIn("python", matched_words)
+
+        # Case 2: Job description asks for Spring Boot (framework), but resume only has Spring 2024 (seasonal).
+        # Spring should be extracted as a missing keyword.
+        job_desc_fw = "We need a Backend Developer with Spring Boot and Java."
+        resume_seasonal = "Java developer. Graduated in Spring 2024."
+        
+        matched_fw, missing_fw = get_matching_keywords(resume_seasonal, job_desc_fw)
+        matched_words_fw = [item["keyword"] for item in matched_fw]
+        missing_words_fw = [item["keyword"] for item in missing_fw]
+        
+        self.assertIn("java", matched_words_fw)
+        self.assertNotIn("spring", matched_words_fw)
+        self.assertIn("spring", missing_words_fw)
+
+        # Case 3: Job description asks for Spring Boot (framework), and resume has Spring Boot (framework).
+        # Spring should be extracted as a matched keyword.
+        resume_fw = "Java developer with Spring Boot experience."
+        matched_match, missing_match = get_matching_keywords(resume_fw, job_desc_fw)
+        matched_words_match = [item["keyword"] for item in matched_match]
+        missing_words_match = [item["keyword"] for item in missing_match]
+        
+        self.assertIn("java", matched_words_match)
+        self.assertIn("spring", matched_words_match)
+        self.assertNotIn("spring", missing_words_match)
+
+    def test_seasonal_calendar_words_fallback(self):
+        # Job description with high frequency of seasonal/calendar words and few standard skills.
+        # Fallback to high frequency words should NOT extract "summer" or "december" or "semester".
+        job_desc = "We have an internship for the summer. The summer is a great summer semester. This summer and december you will work on tasks, tasks, tasks, tasks, tasks."
+        resume = "Some candidate resume."
+        
+        matched, missing = get_matching_keywords(resume, job_desc)
+        all_extracted = [item["keyword"] for item in matched] + [item["keyword"] for item in missing]
+        
+        # 'tasks' should be extracted as fallback, but 'summer', 'december', 'semester' should be ignored
+        self.assertIn("tasks", all_extracted)
+        self.assertNotIn("summer", all_extracted)
+        self.assertNotIn("december", all_extracted)
+        self.assertNotIn("semester", all_extracted)
+
+    def test_graduation_dates_ignored(self):
+        # Job description with graduation dates and class dates
+        job_desc = "Expected Graduation: May 2025. Graduation Date: 12/2026. Class of 2024. Basic knowledge of tasks, tasks, tasks, tasks, tasks."
+        resume = "Some candidate resume."
+        
+        matched, missing = get_matching_keywords(resume, job_desc)
+        all_extracted = [item["keyword"] for item in matched] + [item["keyword"] for item in missing]
+        
+        # 'tasks' should be extracted as fallback, but graduation terms, months, and years should be ignored
+        self.assertIn("tasks", all_extracted)
+        self.assertNotIn("graduation", all_extracted)
+        self.assertNotIn("expected", all_extracted)
+        self.assertNotIn("may", all_extracted)
+        self.assertNotIn("2025", all_extracted)
+        self.assertNotIn("12/2026", all_extracted)
+        self.assertNotIn("2026", all_extracted)
+        self.assertNotIn("class", all_extracted)
+        self.assertNotIn("2024", all_extracted)
 
 if __name__ == "__main__":
     unittest.main()
