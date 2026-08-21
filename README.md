@@ -16,7 +16,7 @@ Key capabilities include:
 
 ---
 
-## 🛠️ Tech Stack & Skills
+## Tech Stack & Skills
 
 *   **Runtime:** Python 3.x
 *   **Web Framework:** Flask 3.0.3
@@ -101,6 +101,8 @@ This project is tailored for agent-assisted development using **Google Antigravi
 ├── requirements.txt     # Python package requirements (Flask, pypdf)
 ├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
 ├── test_analyzer.py     # Comprehensive unit tests for all parser/analyzer functions
+├── pyproject.toml       # Python packaging configuration
+├── uv.lock              # Lock file for uv server
 ├── static/
 │   ├── app.js           # Client-side UI renderer, API interactions, and chart renderers
 │   └── style.css        # Sleek, responsive stylesheet (dark-mode aesthetics)
