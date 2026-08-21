@@ -16,7 +16,7 @@ Key capabilities include:
 
 ---
 
-## 🛠️ Tech Stack & Skills
+## Tech Stack & Skills
 
 *   **Runtime:** Python 3.x
 *   **Web Framework:** Flask 3.0.3
@@ -61,6 +61,9 @@ Launch the Flask development server (runs by default on host `0.0.0.0` and port 
 ```bash
 python app.py
 ```
+> [!WARNING]
+> **macOS Users:**
+> By default, Flask uses Port `5000` which is already in use by macOS's AirPlay Reciever. To avoid any issues resulting from this, you will need to set the port in `app.py` to a different value, such as `5001`:
 
 #### Production Mode (WSGI Server - Recommended)
 To run the application in a production environment, use a WSGI server like **Gunicorn**. This handles multiple concurrent connections, manages worker processes, and is highly resource-efficient (perfect for a Raspberry Pi):
@@ -101,6 +104,8 @@ This project is tailored for agent-assisted development using **Google Antigravi
 ├── requirements.txt     # Python package requirements (Flask, pypdf)
 ├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
 ├── test_analyzer.py     # Comprehensive unit tests for all parser/analyzer functions
+├── pyproject.toml       # Python packaging configuration
+├── uv.lock              # Lock file for uv server
 ├── static/
 │   ├── app.js           # Client-side UI renderer, API interactions, and chart renderers
 │   └── style.css        # Sleek, responsive stylesheet (dark-mode aesthetics)
