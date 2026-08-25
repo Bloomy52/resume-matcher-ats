@@ -22,7 +22,7 @@ User=pi
 WorkingDirectory=/home/pi/resume-matcher-ats
 
 # Absolute path to the virtualenv Gunicorn binary and parameters
-ExecStart=/home/pi/resume-matcher-ats/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
+ExecStart=/home/pi/resume-matcher-ats/.venv/bin/gunicorn --workers 1 --bind 0.0.0.0:5000 app:app
 
 # Automatically restart the service if it crashes
 Restart=always
