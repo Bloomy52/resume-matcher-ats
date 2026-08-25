@@ -178,6 +178,39 @@ function initApp() {
     // 8. Parser UI setup
     setupParserToggles();
     checkGeminiAvailability();
+
+    // 9. About & License Modal Hooks
+    const btnAboutLicense = document.getElementById('btn-about-license');
+    const modalAbout = document.getElementById('modal-about');
+    const btnCloseAbout = document.getElementById('btn-close-about');
+    
+    if (btnAboutLicense && modalAbout && btnCloseAbout) {
+        btnAboutLicense.addEventListener('click', () => {
+            modalAbout.classList.add('active');
+            modalAbout.setAttribute('aria-hidden', 'false');
+        });
+        
+        const closeModal = () => {
+            modalAbout.classList.remove('active');
+            modalAbout.setAttribute('aria-hidden', 'true');
+        };
+        
+        btnCloseAbout.addEventListener('click', closeModal);
+        
+        // Close modal on clicking backdrop
+        modalAbout.addEventListener('click', (e) => {
+            if (e.target === modalAbout) {
+                closeModal();
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalAbout.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    }
 }
 
 // Sidebar & Candidate list Management
