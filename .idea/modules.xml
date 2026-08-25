@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/resume-matcher-ats.iml" filepath="$PROJECT_DIR$/.idea/resume-matcher-ats.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/talent-stream-ats.iml" filepath="$PROJECT_DIR$/.idea/talent-stream-ats.iml" />
     </modules>
   </component>
