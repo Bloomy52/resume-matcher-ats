@@ -277,10 +277,16 @@ body {
     color: var(--text-secondary);
 }
 
+.host-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
 .app-version {
     font-size: 10px;
     color: var(--text-muted);
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* Main Content Area */
@@ -1600,9 +1606,9 @@ body {
 }
 
 /* ==========================================
-   Responsive Tablet & Mobile Styles (< 1368px)
+   Responsive Tablet & Mobile Styles (< 1024px)
    ========================================== */
-@media (max-width: 1367px) {
+@media (max-width: 1023px) {
     /* Menu / Close Button Displays */
     .btn-menu-toggle {
         display: inline-flex;
