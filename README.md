@@ -5,7 +5,7 @@
 
 ## Overview
 
-**Resume Matcher ATS** is an Applicant Tracking System (ATS) Recruiter Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined recruiter dashboard.
+**Resume Matcher ATS** is a Resume Matching Applicant Tracking System (ATS) Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined dashboard.
 
 Key capabilities include:
 *   **Resume Parsing & Info Extraction:** Extracts candidate contact details (names, emails, phones) using regular expressions and heuristics.
