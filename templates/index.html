@@ -70,6 +70,7 @@
                 </div>
                 <div class="host-info">Host: {{ server_os|default('Raspberry Pi') }}</div>
                 <div class="app-version">v0.2.0 (Low-Memory Mode)</div>
+                <button id="btn-about-license" class="btn-link" style="margin-top: 8px;">About & License</button>
             </div>
         </aside>
         
@@ -467,6 +468,35 @@
         </main>
     </div>
     
+    <!-- About & License Modal -->
+    <div id="modal-about" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-about-title">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="modal-about-title" class="modal-title">About Resume Matcher ATS</h2>
+                <button id="btn-close-about" class="modal-close-btn" aria-label="Close Dialog">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-app-title">Resume Matcher ATS</div>
+                <div class="modal-app-meta">© 2026 Louie Bloomberg</div>
+                <div class="modal-license-notice">
+                    Licensed under the GNU Affero General Public License v3.0 only.
+                </div>
+                <div class="modal-disclaimer">
+                    This software is provided without warranty.
+                </div>
+                <div class="modal-actions">
+                    <a href="{{ url_for('get_license') }}" target="_blank" class="btn btn-primary btn-small flex-1 text-center" style="display: flex; align-items: center; justify-content: center;">View Full License</a>
+                    <a href="https://github.com/Bloomy52/talent-stream-ats" target="_blank" class="btn btn-secondary btn-small flex-1 text-center" style="display: flex; align-items: center; justify-content: center;">View Source</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Inline static templates or variables for JS -->
     <script>
         // Store API route variables in window context for static serving robust paths
