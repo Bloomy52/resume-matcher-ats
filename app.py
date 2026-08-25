@@ -8,7 +8,7 @@ import re
 import sqlite3
 import platform
 from flask import Flask, request, jsonify, render_template
-from werkzeug.utils import secure_filename, send_from_directory
+from werkzeug.utils import secure_filename
 from analyzer import get_ats_analysis, extract_text_from_pdf
 
 app = Flask(__name__)
@@ -257,11 +257,10 @@ def delete_candidate(candidate_id):
 
 @app.route('/license', methods=['GET'])
 def get_license():
-    return send_from_directory('.', 'templates/license.html')
+    return render_template('license.html')
 
 if __name__ == '__main__':
     # Run server on port 5000, visible on local network so they can access it on Pi
     # Debug mode is disabled by default for security and low resource usage
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() in ['true', '1', 't', 'y', 'yes']
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)
-
