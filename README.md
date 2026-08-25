@@ -1,11 +1,11 @@
-# TalentStream ATS
+# Resume Matching & Analysis System (ATS)
 
 > [!IMPORTANT]
 > This project is designed to be highly lightweight and resource-efficient. It is optimized to run on low-memory servers (such as a Raspberry Pi 2B) with a strict memory footprint target of **under 50MiB**.
 
 ## Overview
 
-**TalentStream ATS** is an Applicant Tracking System (ATS) Recruiter Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined recruiter dashboard.
+**Resume Matcher ATS** is an Applicant Tracking System (ATS) Recruiter Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined recruiter dashboard.
 
 Key capabilities include:
 *   **Resume Parsing & Info Extraction:** Extracts candidate contact details (names, emails, phones) using regular expressions and heuristics.
@@ -33,8 +33,8 @@ To run the project locally, follow these steps:
 
 ### 1. Clone the GitHub Repository
 ```bash
-git clone https://www.github.com/Bloomy52/talent-stream-ats.git
-cd talent-stream-ats
+git clone https://www.github.com/Bloomy52/resume-matcher-ats.git
+cd resume-matcher-ats
 ```
 
 ### 2. Set Up Environment
