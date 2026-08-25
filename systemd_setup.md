@@ -15,8 +15,8 @@ Description=Resume Matcher ATS Gunicorn Service
 After=network.target
 
 [Service]
-# The user that runs Gunicorn (e.g., pi or louie)
-User=<Your Username Here>
+# The user that runs Gunicorn (e.g., pi)
+User=pi
 
 # Path to your app directory
 WorkingDirectory=/home/pi/resume-matcher-ats
