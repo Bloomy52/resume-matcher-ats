@@ -1,3 +1,7 @@
+# analyzer.py
+# Copyright (c) 2026 Louie Bloomberg
+# SPDX-License-Identifier: AGPL-3.0-only
+
 import re
 import math
 import io
