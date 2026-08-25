@@ -2,6 +2,7 @@ import os
 import json
 import re
 import sqlite3
+import platform
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from analyzer import get_ats_analysis, extract_text_from_pdf
@@ -75,7 +76,24 @@ def extract_text_from_file(file):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    sys_name = platform.system()
+    if sys_name == 'Darwin':
+        server_os = 'macOS'
+    elif sys_name == 'Windows':
+        server_os = 'Windows'
+    elif sys_name == 'Linux':
+        if os.path.exists('/proc/device-tree/model'):
+            try:
+                with open('/proc/device-tree/model', 'r') as f:
+                    server_os = f.read().strip()
+            except Exception:
+                server_os = 'Linux'
+        else:
+            server_os = 'Linux'
+    else:
+        server_os = sys_name
+
+    return render_template('index.html', server_os=server_os)
 
 @app.route('/api/config', methods=['GET'])
 def get_config():
