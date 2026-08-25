@@ -8,7 +8,7 @@ import re
 import sqlite3
 import platform
 from flask import Flask, request, jsonify, render_template
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_from_directory
 from analyzer import get_ats_analysis, extract_text_from_pdf
 
 app = Flask(__name__)
@@ -254,6 +254,10 @@ def delete_candidate(candidate_id):
             return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/license', methods=['GET'])
+def get_license():
+    return send_from_directory('.', 'templates/license.html')
 
 if __name__ == '__main__':
     # Run server on port 5000, visible on local network so they can access it on Pi
