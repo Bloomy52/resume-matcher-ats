@@ -100,6 +100,7 @@ This project is tailored for agent-assisted development using **Google Antigravi
 ├── app.py               # Flask backend controller, SQLite database manager, and server routes
 ├── ats_database.db      # Local SQLite database (automatically initialized) - not included in git repository
 ├── FUTURE_PLANS.md      # Technical roadmap for low-memory environments (Pi 2B)
+├── LICENSE              # AGPL-3.0-only license file
 ├── README.md            # Overview for the repository
 ├── requirements.txt     # Python package requirements (Flask, pypdf)
 ├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
@@ -116,7 +117,10 @@ This project is tailored for agent-assisted development using **Google Antigravi
 ---
 
 ## Contributing
-Contributions are welcome! Please ensure any new features adhere to the low-memory guidelines. Avoid adding large package dependencies, and write unit tests inside `test_analyzer.py` for any new logic in `analyzer.py`.
+Contributions are welcome! Please ensure any new features adhere to the low-memory guidelines. Avoid adding large package dependencies and write unit tests inside `test_analyzer.py` for any new logic in `analyzer.py`.
+By submitting a contribution, you agree that your contribution is licensed under AGPL-3.0-only.
 
 ## License
-This project is licensed under the MIT License.
+Copyright (c) 2026 Louie Bloomberg.
+
+This project is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only).
