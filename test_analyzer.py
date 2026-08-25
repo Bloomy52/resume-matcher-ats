@@ -1,3 +1,7 @@
+# test_analyzer.py
+# Copyright (c) 2026 Louie Bloomberg
+# SPDX-License-Identifier: AGPL-3.0-only
+
 import unittest
 from analyzer import (
     clean_and_normalize,
