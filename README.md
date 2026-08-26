@@ -63,7 +63,7 @@ python app.py
 ```
 > [!WARNING]
 > **macOS Users:**
-> By default, Flask uses Port `5000` which is already in use by macOS's AirPlay Reciever. To avoid any issues resulting from this, you will need to set the port in `app.py` to a different value, such as `5001`:
+> By default, Flask defaults to Port `5000` which is already in use by macOS's AirPlay Reciever. To avoid any issues resulting from this, you will need to set the port in `app.py` to a different value, such as `5001`:
 
 #### Production Mode (WSGI Server - Recommended)
 To run the application in a production environment, use a WSGI server like **Gunicorn**. This handles multiple concurrent connections, manages worker processes, and is highly resource-efficient (perfect for a Raspberry Pi):
