@@ -18,12 +18,11 @@ Key capabilities include:
 
 ## Tech Stack & Skills
 
-*   **Runtime:** Python 3.x
+*   **Runtime:** Python 3.11 or later
 *   **Web Framework:** Flask 3.0.3
 *   **Text Extraction:** `pypdf` 4.2.0 (lightweight PDF parsing)
 *   **Database:** SQLite3
 *   **Frontend:** HTML5, Vanilla CSS3 (Outfit & Inter fonts), Vanilla ES6 JavaScript
-*   **IDE Support:** Fully compatible with the Google Antigravity agentic IDE environment
 
 ---
 
