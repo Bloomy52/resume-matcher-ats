@@ -2,11 +2,15 @@
 
 ## Reporting Security Vulnerabilities
 
-If you discover a security vulnerability in Resume Matcher ATS, please email me at **basis-gyros8g@icloud.com** instead of using the issue tracker.
+If you discover a security vulnerability in Resume Matcher ATS, please report it privately using **GitHub's Security Advisories**:
+
+1. Go to the [Security tab](https://github.com/Bloomy52/resume-matcher-ats/security) of this repository
+2. Click "Report a vulnerability"
+3. Provide details about the vulnerability
 
 **Please do NOT create a public issue for security vulnerabilities.**
 
-I will acknowledge your report within 48 hours and work on a fix.
+This allows us to work on a fix and coordinate disclosure before the vulnerability is made public.
 
 ## Privacy & Data Handling
 
