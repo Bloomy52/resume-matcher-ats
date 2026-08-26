@@ -2,14 +2,9 @@
 
 *Note: This systemctl service file is set up for Raspberry Pi OS with the default username being `pi`.*
 
-#### Create the file:
+#### Paste the following command in the terminal to create a systemd service file and populate it with the correct systemd setup:
 ```bash
-sudo nano /etc/systemd/system/resumematcher.service
-```
-
-#### Paste the contents of the text block below into the edit file screen
-
-```text
+cat > /etc/systemd/system/resumematcher.service <<EOF
 [Unit]
 Description=Resume Matcher ATS Gunicorn Service
 After=network.target
@@ -29,9 +24,8 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
+EOF
 ```
-Then save the file using `Ctrl+X, Y, Enter` to save the file.
-
 
 #### Paste the following commands in the terminal
 ```bash
@@ -40,3 +34,14 @@ sudo systemctl enable resumematcher
 sudo systemctl start resumematcher
 ```
 The WSGI server will start automatically.
+
+If you make any changes to the service file, you need to reload the daemon and restart the service:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart resumematcher
+```
+
+If you make any changes to the application code, you only need to restart the service:
+```bash
+sudo systemctl restart resumematcher
+```
