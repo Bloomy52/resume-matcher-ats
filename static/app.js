@@ -1,3 +1,8 @@
+// static/app.js
+// Copyright (c) 2026 Louie Bloomberg
+// SPDX-License-Identifier: AGPL-3.0-only
+
+
 // State Management
 let state = {
     candidates: [],
