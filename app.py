@@ -9,7 +9,7 @@ import sqlite3
 import platform
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-from analyzer import get_ats_analysis, extract_text_from_pdf
+from analyzer import get_ats_analysis, extract_text_from_pdf, extract_text_from_docx
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
@@ -62,7 +62,7 @@ def extract_candidate_info(resume_text):
     return name, email, phone
 
 def extract_text_from_file(file):
-    """Extracts text from file (PDF or TXT)."""
+    """Extracts text from file (PDF, DOCX, or TXT)."""
     filename = secure_filename(file.filename)
     if not filename:
         return ""
@@ -72,6 +72,8 @@ def extract_text_from_file(file):
     
     if filename.endswith('.pdf'):
         return extract_text_from_pdf(file_bytes)
+    elif filename.endswith('.docx'):
+        return extract_text_from_docx(file_bytes)
     elif filename.endswith('.txt'):
         try:
             return file_bytes.decode('utf-8')
