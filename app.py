@@ -63,7 +63,11 @@ def extract_candidate_info(resume_text):
 
 def extract_text_from_file(file):
     """Extracts text from file (PDF or TXT)."""
-    filename = file.filename.lower()
+    filename = secure_filename(file.filename)
+    if not filename:
+        return ""
+
+    filename = filename.lower()
     file_bytes = file.read()
     
     if filename.endswith('.pdf'):
