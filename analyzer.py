@@ -11,6 +11,7 @@ import urllib.request
 import urllib.parse
 from difflib import SequenceMatcher
 from pypdf import PdfReader
+from docx import Document
 
 # Common English stopwords to clean text without loading large NLP packages
 STOPWORDS = {
@@ -80,6 +81,18 @@ def extract_text_from_pdf(pdf_bytes):
         return text.strip()
     except Exception as e:
         print(f"Error extracting PDF: {e}")
+        return ""
+
+def extract_text_from_docx(docx_bytes):
+    try:
+        doc = Document(io.BytesIO(docx_bytes))
+        text = ""
+        for para in doc.paragraphs:
+            if para.text:
+                text += para.text + "\n"
+        return text.strip()
+    except Exception as e:
+        print(f"Error extracting DOCX: {e}")
         return ""
 
 def strip_graduation_dates(text):
