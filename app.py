@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from analyzer import get_ats_analysis, extract_text_from_pdf
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 DATABASE = 'ats_database.db'
 
