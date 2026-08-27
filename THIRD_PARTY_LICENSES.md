@@ -1,13 +1,7 @@
 # Third-Party Licenses and Copyright Notices
 
-This project uses the following third-party packages. Each package is included under its own license, reproduced below for compliance and attribution purposes.
+This project uses the following third-party packages. 
 
-## Included packages
-
-- Flask 3.1.3 — BSD-3-Clause — Copyright 2010 Pallets
-- gunicorn 26.1.0 — MIT — Copyright 2009-2026 Benoît Chesneau and 2009-2015 Paul J. Davis
-- pypdf 6.16.1 — BSD-3-Clause — Copyright 2006-2008 Mathieu Fenniak, with additional contributions by Ashish Kulkarni and Steve Witham
-- werkzeug 3.1.8 - BSD-3-Clause - Copyright 2007 Pallets
 
 ## 1) Flask 3.1.3
 
@@ -31,7 +25,7 @@ Project homepage: https://gunicorn.org/
 
 License: MIT
 
-2009-2026 (c) Benoît Chesneau <benoitc@gunicorn.org>
+2009-2026 (c) Benoît Chesneau <benoitc@gunicorn.org>\
 2009-2015 (c) Paul J. Davis <paul.joseph.davis@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -46,8 +40,8 @@ Project homepage: https://pypdf.readthedocs.io/
 
 License: BSD-3-Clause
 
-Copyright (c) 2006-2008, Mathieu Fenniak
-Some contributions copyright (c) 2007, Ashish Kulkarni <kulkarni.ashish@gmail.com>
+Copyright (c) 2006-2008, Mathieu Fenniak\
+Some contributions copyright (c) 2007, Ashish Kulkarni <kulkarni.ashish@gmail.com>\
 Some contributions copyright (c) 2014, Steve Witham <switham_github@mac-guyver.com>
 
 All rights reserved.
@@ -76,6 +70,20 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# 5) python-docx 1.2.0
+
+Project homepage: https://github.com/python-openxml/python-docx
+
+License: MIT
+
+The MIT License (MIT)\
+Copyright (c) 2013 Steve Canny, https://github.com/scanny
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Notice
 
