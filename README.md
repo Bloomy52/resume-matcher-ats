@@ -20,7 +20,7 @@ Key capabilities include:
 
 *   **Runtime:** Python 3.11 or later
 *   **Web Framework:** Flask 3.1.3 or later
-*   **Text Extraction:** `pypdf` 6.16.1 or later (lightweight PDF parsing) 
+*   **Text Extraction:** `pypdf` 6.16.1 or later (lightweight PDF parsing)  and `python-docx` 1.2.0 or later (lightweight Word parsing)
 *   **WSGI Server:** Gunicorn 26.1.0 or later (for production deployment)
 *   **Database:** SQLite3
 *   **Frontend:** HTML5, Vanilla CSS3 (Outfit & Inter fonts), Vanilla ES6 JavaScript
