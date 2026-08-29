@@ -1,11 +1,12 @@
 # Resume Matching & Analysis System (ATS)
 
 > [!IMPORTANT]
-> This project is designed to be highly lightweight and resource-efficient. It is optimized to run on low-memory servers (such as a Raspberry Pi 2B) with a strict memory footprint target of **under 50MiB**.
+> This project is designed to be highly lightweight and resource-efficient. It is optimized to run on low-memory devices (such as a Raspberry Pi 2B) with a memory footprint target of **under 50MiB**.
+When I tested it on my Raspberry Pi 2B, the usage seemed to be around 32MiB with one `gunicorn` worker running. See [Known Limitations](#known-limitations) for more details.
 
 ## Overview
 
-**Resume Matcher ATS** is a Resume Matching Applicant Tracking System (ATS) Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF/TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined dashboard.
+**Resume Matcher ATS** is a Resume Matching Applicant Tracking System (ATS) Portal and Candidate Analyzer. It extracts details from candidate resumes and cover letters (PDF, DOCX, TXT), analyzes them against a target job description using custom NLP algorithms, and ranks the candidates inside a streamlined dashboard.
 
 Key capabilities include:
 *   **Resume Parsing & Info Extraction:** Extracts candidate contact details (names, emails, phones) using regular expressions and heuristics.
@@ -26,6 +27,30 @@ Key capabilities include:
 *   **Frontend:** HTML5, Vanilla CSS3 (Outfit & Inter fonts), Vanilla ES6 JavaScript
 
 ---
+
+## Demo Mode
+Don't want to set this up? Look no further than the live Demo Mode! You can check it out at the following link: [https://resume-matcher-ats-hxg7.onrender.com](https://resume-matcher-ats-hxg7.onrender.com)
+
+But... There are some limitations that you should be aware of:
+1. **No Cover Letters.** You can only upload resumes in the Demo Mode. 
+2. **The Demo Mode is non-persistent.** That means the candidate data does not get saved after presenting it to you. Once you reload the page or ask for a new scan, your original scan goes Bye-Bye!
+3. **The Demo Mode only accepts DOCX and PDFs.** For simplicity, the TXT files are not accepted as a valid upload.
+4. **No Gemini API.** Gemini isn't available in the demo mode. You can only use the Local NPL engine.
+
+---
+
+## Configuration
+The app is configured entirely through environment variables. You can set these variables in a `.env` file using the format below.
+
+| Variable         | Required | Default | Description |
+|------------------|----------|---------|-------------|
+| `GEMINI_API_KEY` | No       | unset   | Enables the Google Gemini AI parser option in the UI. Without it, the app uses the local NLP engine only, and the Gemini toggle is disabled client-side. |
+| `FLASK_DEBUG`    | No       | `false` | Enables Flask debug mode. Leave unset in production. |
+
+```dotenv
+GEMINI_API_KEY=your-gemini-api-key
+FLASK_DEBUG=false
+```
 
 ## Quick Start
 
@@ -82,12 +107,8 @@ Alternatively, you can set up the WSGI server using `systemd`. You can find the 
 
 ---
 
-## Agentic Workflow
+## How This Works
 
-This project is tailored for agent-assisted development using **Google Antigravity**:
-*   **Tasks & Planning:** Track tasks via standard agent task files.
-*   **Behavioral Rules:** Rely on minimal, optimized packages as defined in the rules below.
-*   **Low-Memory Policy:** All algorithms must be implemented using vanilla Python standard libraries where possible. Do not import heavy libraries such as Pandas, NumPy, NLTK, or SpaCy to keep memory usage under 50MiB.
 
 ---
 
@@ -116,9 +137,36 @@ This project is tailored for agent-assisted development using **Google Antigravi
 
 ---
 
+## API Endpoints
+
+| Method | Path                    | Description |
+|--------|-------------------------|-------------|
+| GET    | `/`                     | Renders the main dashboard |
+| GET    | `/api/config`           | Returns `{"gemini_enabled": bool}` |
+| POST   | `/api/analyze`          | Accepts a resume file (and optional cover letter) plus a job description; returns the full match analysis |
+| GET    | `/api/candidates`       | Lists all scanned candidates, ranked by match score |
+| GET    | `/api/candidates/<id>`  | Returns full analysis detail for one candidate |
+| DELETE | `/api/candidates/<id>`  | Deletes a candidate record |
+| GET    | `/license`              | Renders the full AGPL-3.0 license text |
+
+---
+
+## Known Limitations
+
+- **Upload size is capped at 5MB.** 5MB is larger than a resume and a cover letter combined. Why would you have a 5MB resume anyways?
+- **Concurrent writes are not supported.** We aren't using PostgreSQL here, so concurrent writes are not supported. Deal with it.
+- **The 50MiB Memory Target.** The 50MiB memory target is just a target, not a hard limit. While the code is not designed to go above the 50MiB memory target, there is still a chance that it might. Your milage will vary.
+- **PDF/DOCX Parsing.** Due to this being super lightweight, the text extraction algorithms don't do well with graphics, columns, tables, pictures, and fancy formatting. Keep it to boring paragraphs and bullet points. 
+
+Contributions addressing any of the above are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+---
+
 ## Contributing
 Contributions are welcome! Please ensure any new features adhere to the low-memory guidelines. Avoid adding large package dependencies and write unit tests inside `test_analyzer.py` for any new logic in `analyzer.py`.
 By submitting a contribution, you agree that your contribution is licensed under AGPL-3.0-only.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on contributing to the project.
 
 ## License
 Copyright (c) 2026 Louie Bloomberg.
