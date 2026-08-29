@@ -8,6 +8,7 @@ import json
 import secrets
 import shutil
 import platform
+import tomllib
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, session
 from werkzeug.utils import secure_filename
@@ -27,6 +28,19 @@ MAX_EXTRACTED_TEXT_CHARS = 50000
 DEMO_STORAGE_DIR = Path('/tmp/resume-matcher-demo')
 DEMO_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
+def get_app_version():
+    """Reads the version string from pyproject.toml."""
+    try:
+        pyproject_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pyproject.toml')
+        with open(pyproject_path, 'rb') as f:
+            data = tomllib.load(f)
+        return data.get('project', {}).get('version', 'unknown')
+    except Exception as e:
+        print(f"Error reading version from pyproject.toml: {e}")
+        return 'unknown'
+
+
+APP_VERSION = get_app_version()
 
 def allowed_file(filename):
     if not filename or '.' not in filename:
@@ -114,7 +128,7 @@ def extract_text_from_upload(file):
 def index():
     sys_name = platform.system()
     server_os = sys_name if sys_name else 'Unknown'
-    return render_template('demo_index.html', server_os=server_os)
+    return render_template('demo_index.html', server_os=server_os, app_version=APP_VERSION)
 
 
 @app.route('/api/config', methods=['GET'])
