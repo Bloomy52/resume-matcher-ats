@@ -185,7 +185,6 @@ This project uses a custom NLP algorithm to analyze your resumes and cover lette
 
 - **Upload size is capped at 5MB.** 5MB is larger than a resume and a cover letter combined. Why would you have a 5MB resume anyways?
 - **Concurrent writes are not supported.** We aren't using PostgreSQL here, so concurrent writes are not supported. Deal with it.
-- **The 50MiB Memory Target.** The 50MiB memory target is just a target, not a hard limit. While the code is not designed to go above the 50MiB memory target, there is still a chance that it might. Your milage will vary.
 - **PDF/DOCX Parsing.** Due to this being super lightweight, the text extraction algorithms don't do well with graphics, columns, tables, pictures, and fancy formatting. Keep it to boring paragraphs and bullet points. 
 
 Contributions addressing any of the above are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
