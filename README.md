@@ -32,10 +32,12 @@ Key capabilities include:
 Don't want to set this up? Look no further than the live Demo Mode! You can check it out at the following link: [https://resume-matcher-ats-hxg7.onrender.com](https://resume-matcher-ats-hxg7.onrender.com)
 
 But... There are some limitations that you should be aware of:
-1. **No Cover Letters.** You can only upload resumes in the Demo Mode. 
-2. **The Demo Mode is non-persistent.** That means the candidate data does not get saved after presenting it to you. Once you reload the page or ask for a new scan, your original scan goes Bye-Bye!
+1. **No Cover Letters.** You can only upload resumes in the Demo Mode.
+2. **The Demo Mode is non-persistent.** That means the candidate data does not get saved after presenting it to you. Once you reload the page or ask for a new scan, your scan is gone.
 3. **The Demo Mode only accepts DOCX and PDFs.** For simplicity, the TXT files are not accepted as a valid upload.
 4. **No Gemini API.** Gemini isn't available in the demo mode. You can only use the Local NPL engine.
+
+If you don't want to deal with those limitations, follow the instructions below to host the app locally on your Raspberry Pi (or computer, idgaf what device you choose).
 
 ---
 
@@ -105,10 +107,38 @@ Once started, open your browser and navigate to `http://localhost:5000` to acces
 
 Alternatively, you can set up the WSGI server using `systemd`. You can find the instructions for setting up the systemd service in the `systemd_setup.md` document.
 
+### `uv` and `pyproject.toml` installation
+Don't want to use the "old-fashioned" way of installing the app? Well, you're in luck! You can use `uv` or `pyproject.toml` to install the dependencies!
+
+#### `uv` installation and usage
+```bash
+uv sync
+uv run app.py
+```
+
+#### `pyproject.toml` installation and usage:
+
+```bash
+pip install -e .
+python app.py
+```
+
+If you are running this on a low-memory device, such as the Raspberry Pi 2B, I do not recommend using `uv` or `pyproject.toml` to install and use this app. Just do it the "old-fashioned" way. If you insist on using `uv` on a low-memory device, you can use the following command:
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install --no-cache-dir -r requirements.txt
+```
+
 ---
 
-## How This Works
+## How Matching Works
 
+This project uses a custom NLP algorithm to analyze your resumes and cover letters against the job description. A high-level overview is detailed below.
+
+- **Do the right skills show up?** This accounts for 60% of the score. Key skills from the job description are checked against the resume, with some wiggle room for typos or slight wording differences.
+- **Does the resume "sound like" the job?** This accounts for 40% of the score. The overall language and phrasing of the resume is compared against the job description to see how closely they align.
+- **Bonus points** for quantified wins (numbers, percentages), clean section headers, and a solid cover letter if you upload one.
 
 ---
 
