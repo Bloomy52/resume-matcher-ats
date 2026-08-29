@@ -84,6 +84,7 @@ def extract_text_from_pdf(pdf_bytes):
         return ""
 
 def extract_text_from_docx(docx_bytes):
+    """Extracts text from DOCX bytes using python-docx. Returns empty string on error."""
     try:
         doc = Document(io.BytesIO(docx_bytes))
         text = ""
