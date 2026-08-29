@@ -7,6 +7,7 @@ import json
 import re
 import sqlite3
 import platform
+import tomllib
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from analyzer import get_ats_analysis, extract_text_from_pdf, extract_text_from_docx
@@ -15,6 +16,21 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 DATABASE = 'ats_database.db'
+
+def get_app_version():
+    """Reads the version string from pyproject.toml."""
+    try:
+        pyproject_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pyproject.toml')
+        with open(pyproject_path, 'rb') as f:
+            data = tomllib.load(f)
+        return data.get('project', {}).get('version', 'unknown')
+    except Exception as e:
+        print(f"Error reading version from pyproject.toml: {e}")
+        return 'unknown'
+
+
+APP_VERSION = get_app_version()
+
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
@@ -103,7 +119,7 @@ def index():
     else:
         server_os = sys_name
 
-    return render_template('index.html', server_os=server_os)
+    return render_template('index.html', server_os=server_os, app_version=APP_VERSION)
 
 @app.route('/api/config', methods=['GET'])
 def get_config():
