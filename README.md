@@ -146,23 +146,26 @@ This project uses a custom NLP algorithm to analyze your resumes and cover lette
 
 ```text
 .
-├── .gitignore           # gitignore file for the repository. Includes Python Template and SQLite database
-├── analyzer.py          # Custom NLP scoring, keyword extraction, and structural parser
-├── app.py               # Flask backend controller, SQLite database manager, and server routes
-├── ats_database.db      # Local SQLite database (automatically initialized) - not included in git repository
-├── FUTURE_PLANS.md      # Technical roadmap for low-memory environments (Pi 2B)
-├── LICENSE              # AGPL-3.0-only license file
-├── README.md            # Overview for the repository
-├── requirements.txt     # Python package requirements
-├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
-├── test_analyzer.py     # Comprehensive unit tests for all parser/analyzer functions
-├── pyproject.toml       # Python packaging configuration
-├── uv.lock              # Lock file for uv server
+├── .gitignore              # gitignore file for the repository. Includes Python Template and SQLite database
+├── analyzer.py             # Custom NLP scoring, keyword extraction, and structural parser
+├── app.py                  # Flask backend controller, SQLite database manager, and server routes
+├── ats_database.db         # Local SQLite database (automatically initialized) - not included in git repository
+├── THIRD-PARTY-NOTICES.txt # Third-party notices for the project
+├── LICENSE                 # AGPL-3.0-only license file
+├── README.md               # Overview for the repository
+├── requirements.txt        # Python package requirements
+├── systemd_setup.md        # Instructions for how to set up a systemd service for the WSGI server
+├── test_analyzer.py        # Comprehensive unit tests for all parser/analyzer functions
+├── pyproject.toml          # Python packaging configuration
+├── uv.lock                 # Lock file for uv server
 ├── static/
-│   ├── app.js           # Client-side UI renderer, API interactions, and chart renderers
-│   └── style.css        # Sleek, responsive stylesheet (dark-mode aesthetics)
+│   ├── app.js              # Client-side UI renderer, API interactions, and chart renderers
+│   ├── demo.js             # Demo version of app.js
+│   └── style.css           # Sleek, responsive stylesheet with Dark Mode support
 └── templates/
-    └── index.html       # Primary dashboard HTML page structure
+    ├── demo_index.html     # Demo version of index.html
+    ├── index.html          # Primary dashboard HTML page structure
+    └── license.html        # AGPL-3.0 license text page
 ```
 
 ---
