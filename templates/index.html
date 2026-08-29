@@ -73,7 +73,7 @@
                     <span class="status-label">Server Status: Online</span>
                 </div>
                 <div class="host-info">Host: {{ server_os|default('Raspberry Pi') }}</div>
-                <div class="app-version">v0.3.0 (Low-Memory Mode)</div>
+                <div class="app-version">v{{ app_version }} (Low-Memory Mode)</div>
                 <button id="btn-about-license" class="btn-link" style="margin-top: 8px;">About & License</button>
             </div>
         </aside>
@@ -486,7 +486,15 @@
             </div>
             <div class="modal-body">
                 <div class="modal-app-title">Resume Matcher ATS</div>
-                <div class="modal-app-meta">© 2026 Louie Bloomberg</div>
+                <div class="modal-app-meta">Copyright © 2026 Louie Bloomberg</div>
+                <div class="modal-about-text">
+                   A simple, self-hosted tool for comparing resumes and cover letters against a job description. It highlights strong matches, points out missing keywords, and gives quick feedback candidates can act on.
+                </div>
+                <div class="modal-about-meta-row">
+                    <span>Version {{ app_version }}</span>
+                    <span class="meta-separator">&bull;</span>
+                    <span>Running on {{ server_os|default('Raspberry Pi') }}</span>
+                </div>
                 <div class="modal-license-notice">
                     This software is licensed under AGPL-3.0-only. If you modify and deploy this application on a server, you must provide access to the modified source code to all users.
                 </div>
