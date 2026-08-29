@@ -185,6 +185,38 @@ function initApp() {
             }
         });
     }
+
+
+    // 10. About This Demo Modal Hooks
+    const btnAboutDemo = document.getElementById('btn-about-demo');
+    const modalAboutDemo = document.getElementById('modal-about-demo');
+    const btnCloseAboutDemo = document.getElementById('btn-close-about-demo');
+
+    if (btnAboutDemo && modalAboutDemo && btnCloseAboutDemo) {
+        btnAboutDemo.addEventListener('click', () => {
+            modalAboutDemo.classList.add('active');
+            modalAboutDemo.setAttribute('aria-hidden', 'false');
+        });
+
+        const closeDemoModal = () => {
+            modalAboutDemo.classList.remove('active');
+            modalAboutDemo.setAttribute('aria-hidden', 'true');
+        };
+
+        btnCloseAboutDemo.addEventListener('click', closeDemoModal);
+
+        modalAboutDemo.addEventListener('click', (e) => {
+            if (e.target === modalAboutDemo) {
+                closeDemoModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalAboutDemo.classList.contains('active')) {
+                closeDemoModal();
+            }
+        });
+    }
 }
 
 function showScanPanel() {
