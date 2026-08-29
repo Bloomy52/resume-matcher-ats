@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > This project is designed to be highly lightweight and resource-efficient. It is optimized to run on low-memory devices (such as a Raspberry Pi 2B) with a memory footprint target of **under 50MiB**.
-When I tested it on my Raspberry Pi 2B, the usage seemed to be around 32MiB with one `gunicorn` worker running. See [Known Limitations](#known-limitations) for more details.
+When I tested it on my Raspberry Pi 2B, the usage seemed to be around 32MiB with one `gunicorn` worker running.
 
 ## Overview
 
@@ -153,7 +153,7 @@ This project uses a custom NLP algorithm to analyze your resumes and cover lette
 ├── FUTURE_PLANS.md      # Technical roadmap for low-memory environments (Pi 2B)
 ├── LICENSE              # AGPL-3.0-only license file
 ├── README.md            # Overview for the repository
-├── requirements.txt     # Python package requirements (Flask, pypdf)
+├── requirements.txt     # Python package requirements
 ├── systemd_setup.md     # Instructions for how to set up a systemd service for the WSGI server
 ├── test_analyzer.py     # Comprehensive unit tests for all parser/analyzer functions
 ├── pyproject.toml       # Python packaging configuration
