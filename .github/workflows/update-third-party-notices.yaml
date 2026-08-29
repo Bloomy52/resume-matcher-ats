@@ -37,7 +37,6 @@ jobs:
           pip-licenses \
             --format=plain-vertical \
             --with-license-file \
-            --with-notice-file \
             --no-license-path \
             --output-file=THIRD-PARTY-NOTICES.txt
 
