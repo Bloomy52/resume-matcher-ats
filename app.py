@@ -94,10 +94,7 @@ def extract_text_from_file(file):
         try:
             return file_bytes.decode('utf-8')
         except UnicodeDecodeError:
-            try:
-                return file_bytes.decode('latin-1')
-            except Exception:
-                return ""
+            return ""
     return ""
 
 @app.route('/')
