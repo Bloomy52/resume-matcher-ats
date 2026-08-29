@@ -59,6 +59,7 @@
                 <div class="host-info">Host: {{ server_os|default('Cloud Demo') }}</div>
                 <div class="app-version">v0.3.0 (Public Demo)</div>
                 <button id="btn-about-license" class="btn-link" style="margin-top: 8px;">About & License</button>
+                <button id="btn-about-demo" class="btn-link">About This Demo</button>
             </div>
         </aside>
 
@@ -391,6 +392,31 @@
         </div>
     </div>
 
+    <!-- About This Demo Modal -->
+    <div id="modal-about-demo" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-about-demo-title">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="modal-about-demo-title" class="modal-title">About This Demo</h2>
+                <button id="btn-close-about-demo" class="modal-close-btn" aria-label="Close Dialog">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-license-notice">
+                    This is a public demo of Resume Matcher ATS. Uploaded resumes and job descriptions are processed temporarily and automatically deleted.
+                </div>
+                <div class="modal-license-notice">
+                    AI-powered parsing (Google Gemini) is disabled in this demo. Only the local, offline matching engine is used to analyze your resume.
+                </div>
+                <div class="modal-disclaimer">
+                    Avoid uploading resumes containing sensitive personal information you wouldn't want processed by a public demo.
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Inline static templates or variables for JS -->
     <script>
         // Store API route variables in window context for static serving robust paths
