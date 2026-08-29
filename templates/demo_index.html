@@ -377,7 +377,15 @@
             </div>
             <div class="modal-body">
                 <div class="modal-app-title">Resume Matcher ATS</div>
-                <div class="modal-app-meta">© 2026 Louie Bloomberg</div>
+                <div class="modal-app-meta">Copyright © 2026 Louie Bloomberg</div>
+                <div class="modal-about-text">
+                    A simple, self-hosted tool for comparing resumes against a job description. It uses a custom keyword and similarity engine to highlight strong matches, identify missing keywords, and provide quick feedback on how well a resume aligns with the role.
+                </div>
+                <div class="modal-about-meta-row">
+                    <span>Version {{ app_version }}</span>
+                    <span class="meta-separator">&bull;</span>
+                    <span>Running on {{ server_os|default('Cloud Instance') }}</span>
+                </div>
                 <div class="modal-license-notice">
                     This software is licensed under AGPL-3.0-only. If you modify and deploy this application on a server, you must provide access to the modified source code to all users.
                 </div>
