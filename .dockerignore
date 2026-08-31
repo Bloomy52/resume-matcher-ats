@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python cache/venvs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+# Environment/secrets
+.env
+.env.*
+!.env.sample
+
+# Build/output artifacts
+build/
+dist/
+*.egg-info/
+summaries/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
