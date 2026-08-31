@@ -107,20 +107,12 @@ Once started, open your browser and navigate to `http://localhost:5000` to acces
 
 Alternatively, you can set up the WSGI server using `systemd`. You can find the instructions for setting up the systemd service in the `systemd_setup.md` document.
 
-### `uv` and `pyproject.toml` installation
-Don't want to use the "old-fashioned" way of installing the app? Well, you're in luck! You can use `uv` or `pyproject.toml` to install the dependencies!
+#### `uv`
+Don't want to use the "old-fashioned" way of installing the app? Well, you're in luck! You can use `uv` to install the dependencies!
 
-#### `uv` installation and usage
 ```bash
 uv sync
 uv run app.py
-```
-
-#### `pyproject.toml` installation and usage:
-
-```bash
-pip install -e .
-python app.py
 ```
 
 If you are running this on a low-memory device, such as the Raspberry Pi 2B, I do not recommend using `uv` or `pyproject.toml` to install and use this app. Just do it the "old-fashioned" way. If you insist on using `uv` on a low-memory device, you can use the following command:
@@ -129,6 +121,15 @@ uv venv
 source .venv/bin/activate
 uv pip install --no-cache-dir -r requirements.txt
 ```
+
+### Docker
+If you somehow decided to use Docker instead of the above methods, we have conveniently provided you with a [Dockerfile](./Dockerfile). The install commands are below:
+```bash
+docker build -t resume-matcher-ats .
+docker run --rm -it resume-matcher-ats
+```
+If you have a `.env` file, replace `docker run --rm -it resume-matcher-ats` with `docker run --rm -it --env-file .env resume-matcher-ats`.
+
 
 ---
 
