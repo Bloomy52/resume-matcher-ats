@@ -39,6 +39,10 @@ But... There are some limitations that you should be aware of:
 
 If you don't want to deal with those limitations, follow the instructions below to host the app locally on your Raspberry Pi (or computer, idgaf what device you choose).
 
+P.S. The demo is hosted on Render's free tier which means that the instance does spin down if it is unused for a while. 
+The demo will automatically start up when you request the page, but it will take a little bit of time for it to boot up.
+Please be patient if the demo does load. I am not spending money on a demo server that is not going to get used. 
+
 ---
 
 ## Configuration
