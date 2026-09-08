@@ -35,7 +35,7 @@ But... There are some limitations that you should be aware of:
 1. **No Cover Letters.** You can only upload resumes in the Demo Mode.
 2. **The Demo Mode is non-persistent.** That means the candidate data does not get saved after presenting it to you. Once you reload the page or ask for a new scan, your scan is gone.
 3. **The Demo Mode only accepts DOCX and PDFs.** For simplicity, the TXT files are not accepted as a valid upload.
-4. **No Gemini API.** Gemini isn't available in the demo mode. You can only use the Local NPL engine.
+4. **No Gemini API.** Gemini isn't available in the demo mode. You can only use the Local NLP engine.
 
 If you don't want to deal with those limitations, follow the instructions below to host the app locally on your Raspberry Pi (or computer, idgaf what device you choose).
 
