@@ -208,4 +208,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on contributing to the p
 ## License
 Copyright (c) 2026 Louie Bloomberg.
 
-This project is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only).
+This project is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only). Find the full license text here [LICENSE](LICENSE).
