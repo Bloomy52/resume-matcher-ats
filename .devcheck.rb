@@ -1,6 +1,6 @@
 # .devcheck.rb
 # Copyright (c) 2026 Louie Bloomberg.
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: AGPL-3.0-only
 
 command "python3"
 command "git"
