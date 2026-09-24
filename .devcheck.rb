@@ -2,6 +2,9 @@
 # Copyright (c) 2026 Louie Bloomberg.
 # SPDX-License-Identifier: AGPL-3.0-only
 
+name "Resume Matcher & Candidate Analyzer"
+id "resume-matcher-ats"
+
 command "python3"
 command "git"
 command "pip3"
