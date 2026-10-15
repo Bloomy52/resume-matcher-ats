@@ -484,7 +484,7 @@ function renderAnalysisResults() {
     if (elements.resCandidateParser) {
         const parser = analysis.parser_used || 'local';
         if (parser === 'gemini') {
-            elements.resCandidateParser.textContent = 'Google Gemini AI';
+            elements.resCandidateParser.textContent = 'Google Gemini';
             elements.resCandidateParser.className = 'parser-used-badge badge-gemini';
         } else {
             elements.resCandidateParser.textContent = 'Local NLP';
