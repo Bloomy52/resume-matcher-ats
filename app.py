@@ -283,4 +283,4 @@ if __name__ == '__main__':
     # Debug mode is disabled by default for security and low resource usage
     read_env()
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() in ['true', '1', 't', 'y', 'yes']
-    app.run(host='0.0.0.0', port=5001, debug=debug_mode)
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
