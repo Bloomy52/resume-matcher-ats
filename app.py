@@ -10,7 +10,7 @@ import platform
 import tomllib
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-from analyzer import get_ats_analysis, extract_text_from_pdf, extract_text_from_docx
+from analyzer import get_ats_analysis, extract_text_from_pdf, extract_text_from_docx, read_env
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
@@ -281,5 +281,6 @@ def get_license():
 if __name__ == '__main__':
     # Run server on port 5000, visible on local network so they can access it on Pi
     # Debug mode is disabled by default for security and low resource usage
+    read_env()
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() in ['true', '1', 't', 'y', 'yes']
-    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
+    app.run(host='0.0.0.0', port=5001, debug=debug_mode)
