@@ -13,7 +13,29 @@ from difflib import SequenceMatcher
 from pypdf import PdfReader
 from docx import Document
 
+# Loading Environment Variables
+def _strip_quotes(value):
+    # Remove a single matching pair of surrounding quotes (single or double), if present.
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+        return value[1:-1]
+    return value
+
+def read_env():
+    # read full .env and set environment variables
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    env_path = os.path.join(base_dir, ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r") as env_file:
+            for line in env_file:
+                if "=" in line:
+                    key, value = line.strip().split("=", 1)
+                    value = _strip_quotes(value)
+                    os.environ[key.strip()] = value
+    return None
+
 # Common English stopwords to clean text without loading large NLP packages
+
 STOPWORDS = {
     "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", 
     "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", 
@@ -476,7 +498,7 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
     }
 
 def _analyze_with_gemini(resume_text, job_desc_text, cover_letter_text, api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
     
     prompt = (
         "You are an expert Applicant Tracking System (ATS) auditor. Analyze the following candidate's resume "
@@ -617,7 +639,7 @@ def _analyze_with_gemini(resume_text, job_desc_text, cover_letter_text, api_key)
     req = urllib.request.Request(url, data=req_body, headers=headers, method="POST")
     
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             res_data = response.read().decode("utf-8")
             res_json = json.loads(res_data)
             content_text = res_json['candidates'][0]['content']['parts'][0]['text']
