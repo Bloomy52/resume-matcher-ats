@@ -205,6 +205,10 @@ By submitting a contribution, you agree that your contribution is licensed under
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on contributing to the project.
 
+### AI Disclosure
+
+AI tools, including ChatGPT, Claude Sonnet, and Gemini 3.1 Pro, were used to assist with development, debugging, and documentation. I reviewed all AI Contributions and tested them before committing them to this repository. There is an optional AI analysis function via Gemini 3.8 Flash. 
+
 ## License
 Copyright (c) 2026 Louie Bloomberg.
 
