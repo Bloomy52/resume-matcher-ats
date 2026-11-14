@@ -12,7 +12,9 @@ from analyzer import (
     analyze_resume_structure,
     analyze_cover_letter,
     get_ats_analysis,
-    has_spring_framework
+    has_spring_framework,
+    extract_text_from_docx,
+    has_c_language
 )
 
 class TestAnalyzer(unittest.TestCase):
@@ -228,6 +230,93 @@ class TestAnalyzer(unittest.TestCase):
         self.assertNotIn("2026", all_extracted)
         self.assertNotIn("class", all_extracted)
         self.assertNotIn("2024", all_extracted)
+
+    def test_keywords_match_whole_words_only(self):
+        job = "Requires Java, Go, Rust, REST, Git and SQL."
+        resume = "JavaScript developer at a digital restaurant group. Good at trust and MySQL."
+        matched, missing = get_matching_keywords(resume, job)
+        matched_words = [item["keyword"] for item in matched]
+        for kw in ("java", "go", "rust", "rest", "git", "sql"):
+            self.assertNotIn(kw, matched_words)
+            self.assertIn(kw, [item["keyword"] for item in missing])
+
+    def test_keyword_aliases_and_special_tokens(self):
+        job = "We use C, C++, .NET, CI/CD, Kubernetes, PostgreSQL, JavaScript and problem solving."
+        resume = "Wrote C and C++ services on .NET. Built CI/CD with k8s and Postgres. Strong JS and problem-solving."
+        matched, missing = get_matching_keywords(resume, job)
+        matched_words = [item["keyword"] for item in matched]
+        for kw in ("c", "c++", ".net", "ci/cd", "kubernetes", "postgresql", "javascript", "problem-solving"):
+            self.assertIn(kw, matched_words)
+        self.assertEqual(missing, [])
+
+    def test_c_language_not_confused_with_other_c(self):
+        matched, missing = get_matching_keywords("Python developer", "Plan C and Vitamin C and Python, Git, SQL, AWS, Docker")
+        self.assertNotIn("c", [item["keyword"] for item in matched + missing])
+
+    def test_section_headers_must_be_headers(self):
+        resume = "Summary\nA developer with experience in skills training and a case study on projects.\nEducation\nBS CS"
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(struct["found_headers"], ["education"])
+        inline = analyze_resume_structure("SKILLS: Python, SQL\nWork Experience\nProjects")
+        self.assertEqual(inline["found_headers"], ["experience", "skills", "projects"])
+
+    def test_metrics_and_verbs(self):
+        resume = "Cut costs 30%, saved $1.5M, served 12,000 users, grew traffic 3x, handled 10k requests, 5+ clients. Automate builds; developing tools."
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(struct["metrics_count"], 6)
+        self.assertIn("automated", struct["action_verbs_found"])
+        self.assertIn("developed", struct["action_verbs_found"])
+
+    def test_cover_letter_greeting_and_signoff_position(self):
+        body = "I pay attention to detail and enjoy working with recruiters. " * 20
+        cl = analyze_cover_letter(body, "python")
+        self.assertFalse(cl["has_greeting"])
+        self.assertFalse(cl["has_signoff"])
+        cl = analyze_cover_letter("Dear Team,\n" + body + "\nBest regards,\nJo", "python")
+        self.assertTrue(cl["has_greeting"])
+        self.assertTrue(cl["has_signoff"])
+
+    def test_docx_extraction_includes_tables_in_order(self):
+        import io
+        from docx import Document
+        doc = Document()
+        doc.add_paragraph("Jane Doe")
+        table = doc.add_table(rows=1, cols=2)
+        table.rows[0].cells[0].text = "Skills"
+        table.rows[0].cells[1].text = "Python, SQL"
+        doc.add_paragraph("Education")
+        buf = io.BytesIO()
+        doc.save(buf)
+        text = extract_text_from_docx(buf.getvalue())
+        self.assertEqual(text.splitlines(), ["Jane Doe", "Skills", "Python, SQL", "Education"])
+
+    def test_c_language_lowercase_only_in_context(self):
+        self.assertTrue(has_c_language("Experienced c developer"))
+        self.assertTrue(has_c_language("systems work in c/c++"))
+        self.assertTrue(has_c_language("knows C++ and c"))
+        self.assertFalse(has_c_language("options: a) red b) blue c) green"))
+        self.assertFalse(has_c_language("Plan C and vitamin c"))
+
+    def test_continuous_integration_alias(self):
+        matched, missing = get_matching_keywords("Maintained CI/CD pipelines", "Experience with continuous integration required.")
+        self.assertIn("ci/cd", [item["keyword"] for item in matched])
+
+    def test_short_lines_are_not_headers(self):
+        resume = "5 years of experience\nExperience with Python\nStrong skills\nEducation & Training\nProfessional Experience:"
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(sorted(struct["found_headers"]), ["education", "experience"])
+        none = analyze_resume_structure("5 years of experience\nExperience with Python\nStrong skills")
+        self.assertEqual(none["found_headers"], [])
+
+    def test_greeting_needs_whole_word(self):
+        cl = analyze_cover_letter("I am dearly interested in this role. " * 30, "python")
+        self.assertFalse(cl["has_greeting"])
+
+    def test_restful_matches_rest(self):
+        matched, missing = get_matching_keywords("Python Java SQL Docker. Developed RESTful APIs.", "Python Java REST SQL Docker")
+        self.assertIn("rest", [item["keyword"] for item in matched])
+        matched, missing = get_matching_keywords("Python Java SQL Docker.", "Python Java RESTful SQL Docker")
+        self.assertIn("rest", [item["keyword"] for item in missing])
 
 if __name__ == "__main__":
     unittest.main()

@@ -72,11 +72,27 @@ TECH_SKILLS = {
     "react", "angular", "vue", "nextjs", "node", "express", "django", "flask", "fastapi", "spring", "rails",
     "html", "css", "tailwind", "sass", "bootstrap", "jquery",
     "sql", "mysql", "postgresql", "sqlite", "mongodb", "redis", "dynamodb", "nosql", "database", "oracle",
-    "git", "github", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "ci/cd", "devops", "terraform",
+    "git", "github", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "cicd", "devops", "terraform",
     "linux", "bash", "unix", "raspberry", "arduino", "embedded", "c",
     "rest", "graphql", "api", "microservices", "serverless", "soap",
     "tensorflow", "pytorch", "keras", "numpy", "pandas", "scipy", "scikit-learn", "matplotlib", "seaborn",
-    "scrum", "agile", "jira", "confluence", "trello", "gitlabs"
+    "scrum", "agile", "jira", "confluence", "trello", "gitlab", "dotnet"
+}
+
+# Spelling variants a resume may use for a skill. Maps variant -> canonical keyword.
+ALIASES = {
+    "js": "javascript", "ts": "typescript", "k8s": "kubernetes", "postgres": "postgresql",
+    "golang": "go", "nodejs": "node", "reactjs": "react", "vuejs": "vue", "angularjs": "angular",
+    "expressjs": "express", "mongo": "mongodb", "scikit": "scikit-learn", "sklearn": "scikit-learn",
+    "continuous-integration": "cicd", "restful": "rest",
+}
+
+# Internal keyword -> how it is shown to the user
+DISPLAY_NAMES = {"cpp": "c++", "csharp": "c#", "dotnet": ".net", "cicd": "ci/cd"}
+
+MULTI_WORD_SKILLS = {
+    "machine learning", "data science", "web development", "software engineering",
+    "project management", "product management", "cloud computing"
 }
 
 SOFT_SKILLS = {
@@ -95,25 +111,35 @@ def extract_text_from_pdf(pdf_bytes):
     """Extracts text from PDF bytes using pypdf. Returns empty string on error."""
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
-        text = ""
+        parts = []
         for page in reader.pages:
             extracted = page.extract_text()
             if extracted:
-                text += extracted + "\n"
-        return text.strip()
+                parts.append(extracted)
+        return "\n".join(parts).strip()
     except Exception as e:
         print(f"Error extracting PDF: {e}")
         return ""
 
 def extract_text_from_docx(docx_bytes):
-    """Extracts text from DOCX bytes using python-docx. Returns empty string on error."""
+    """Extracts text from DOCX bytes (paragraphs and tables, in document order). Returns empty string on error."""
     try:
         doc = Document(io.BytesIO(docx_bytes))
-        text = ""
-        for para in doc.paragraphs:
-            if para.text:
-                text += para.text + "\n"
-        return text.strip()
+        lines = []
+        for block in doc.iter_inner_content():
+            if hasattr(block, "rows"):
+                # Many resume templates keep skills/experience in tables; merged cells repeat, so de-duplicate per row
+                for row in block.rows:
+                    seen = []
+                    for cell in row.cells:
+                        text = cell.text.strip()
+                        if text and text not in seen:
+                            seen.append(text)
+                    if seen:
+                        lines.append("\n".join(seen))
+            elif block.text:
+                lines.append(block.text)
+        return "\n".join(lines).strip()
     except Exception as e:
         print(f"Error extracting DOCX: {e}")
         return ""
@@ -150,7 +176,8 @@ def clean_and_normalize(text):
     text = text.replace("c++", "cpp")
     text = text.replace("c#", "csharp")
     text = text.replace(".net", "dotnet")
-    text = text.replace("node.js", "nodejs")
+    text = re.sub(r'\b([a-z]+)\.js\b', r'\1js', text)  # node.js -> nodejs, react.js -> reactjs
+    text = re.sub(r'\bci\s*/\s*cd\b', 'cicd', text)
     return text
 
 def has_spring_framework(text):
@@ -237,39 +264,58 @@ def get_ngrams(tokens, n=2):
         ngrams.append(" ".join(tokens[i:i+n]))
     return ngrams
 
+def _phrase_pattern(keyword):
+    """Regex for a keyword on word boundaries; spaces/hyphens are interchangeable, plurals allowed."""
+    parts = [re.escape(p) for p in re.split(r'[\s-]+', keyword) if p]
+    return r'(?<![a-z0-9])' + r'[\s-]+'.join(parts) + r'(?:e?s)?(?![a-z0-9])'
+
 def is_fuzzy_match(keyword, text, threshold=0.85):
     """
-    Checks if a keyword has a fuzzy match in the text.
-    First uses a fast-path substring check. If not found, falls back
-    to comparing candidate words/phrases using SequenceMatcher.
+    Checks if a keyword appears in the text as a whole word/phrase (never as a piece of a
+    longer word, so 'java' does not match 'javascript'). Longer single-word keywords also
+    tolerate small typos, e.g. 'pyhton' for 'python'.
     """
     if not keyword or not text:
         return False
-        
-    # Fast path: exact string inclusion
-    if keyword in text:
+
+    if re.search(_phrase_pattern(keyword), text):
         return True
-        
-    # Tokenize the text and strip punctuation to run local sequence matching
-    raw_words = text.split()
-    words = [re.sub(r'[^\w\s-]', '', w) for w in raw_words]
-    words = [w for w in words if w]
-    
-    kw_words = keyword.split()
-    n = len(kw_words)
-    
-    if n == 0 or len(words) < n:
+
+    # Typo tolerance only for long single words: short ones ('react'/'reach') collide too easily
+    if len(keyword) < 6 or not re.fullmatch(r'[a-z]+', keyword):
         return False
-        
-    # Slide a window of size 'n' across the text
-    for i in range(len(words) - n + 1):
-        phrase = " ".join(words[i:i+n])
-        # Calculate ratio
-        ratio = SequenceMatcher(None, phrase, keyword).ratio()
-        if ratio >= threshold:
+    for word in set(re.findall(r'[a-z]+', text)):
+        if (word[0] == keyword[0] and abs(len(word) - len(keyword)) <= 1
+                and SequenceMatcher(None, word, keyword).ratio() >= threshold):
             return True
-            
     return False
+
+_C_CONTEXT = r'(?:programming|language|developers?|engineers?|code|coding)\b'
+
+def has_c_language(text):
+    """
+    True if the standalone language 'C' appears (tokenize drops 1-letter words).
+    Uppercase 'C' counts unless it is a label like 'Plan C'. Lowercase 'c' is ambiguous
+    ('c)' list markers) so it only counts in context: 'c developer', 'c/c++', 'c and c++'.
+    """
+    for m in re.finditer(r'(?<![\w+#./-])C(?![\w+#-]|\.\w)', text):
+        before = text[max(0, m.start() - 12):m.start()].lower()
+        if not re.search(r'(?:vitamin|plan|class|grade|option|type|hepatitis)\s*$', before):
+            return True
+    lowered = text.lower()
+    return bool(re.search(r'(?<![\w+#./-])c\s+' + _C_CONTEXT, lowered)
+                or re.search(r'(?<![\w+#./-])c\s*(?:/|,|and|&)\s*c\+\+', lowered)
+                or re.search(r'c\+\+\s*(?:/|,|and|&)\s*c(?![\w+#-])', lowered))
+
+def _keyword_present(kw, resume_text, resume_cleaned):
+    if kw == "spring":
+        return has_spring_framework(resume_text)
+    if kw == "c":
+        return has_c_language(resume_text)
+    if is_fuzzy_match(kw, resume_cleaned, threshold=0.80):
+        return True
+    return any(re.search(_phrase_pattern(alias), resume_cleaned)
+               for alias, canon in ALIASES.items() if canon == kw)
 
 def get_matching_keywords(resume_text, job_desc_text):
     """
@@ -277,34 +323,37 @@ def get_matching_keywords(resume_text, job_desc_text):
     Returns categorized lists of matched and missing keywords.
     """
     resume_cleaned = clean_and_normalize(resume_text)
-    job_cleaned = clean_and_normalize(job_desc_text)
     
-    job_tokens = tokenize(job_desc_text)
+    job_tokens = [ALIASES.get(t, t) for t in tokenize(job_desc_text)]
     job_bigrams = get_ngrams(job_tokens, 2)
+    all_dict_skills = TECH_SKILLS | SOFT_SKILLS | BUSINESS_SKILLS
     
     # Identify skills from our dictionary present in the Job Description
     found_keywords = set()
     
-    # Check single-word skills
     for token in set(job_tokens):
-        if token in TECH_SKILLS or token in SOFT_SKILLS or token in BUSINESS_SKILLS:
+        if token in all_dict_skills:
             found_keywords.add(token)
             
-    # Check bi-gram skills (e.g. "product management", "soft skills")
-    all_dict_skills = TECH_SKILLS.union(SOFT_SKILLS).union(BUSINESS_SKILLS)
+    # Multi-word skills; "problem solving" and "problem-solving" are the same skill
     for bigram in set(job_bigrams):
-        # We also add common multi-word skills manually if not in list
-        if bigram in all_dict_skills or bigram in ["machine learning", "data science", "web development", "software engineering", "project management", "product management", "cloud computing"]:
+        hyphenated = ALIASES.get(bigram.replace(" ", "-"), bigram.replace(" ", "-"))
+        if bigram in MULTI_WORD_SKILLS:
             found_keywords.add(bigram)
+        elif hyphenated in all_dict_skills:
+            found_keywords.add(hyphenated)
+
+    # 'C' is a single letter, which tokenize() drops
+    if has_c_language(job_desc_text):
+        found_keywords.add("c")
             
     # If no standard skills found, fallback to high frequency words in job description
     if len(found_keywords) < 5:
-        # Find top 15 words in job description that are not stopwords
         word_counts = {}
         for token in job_tokens:
             if len(token) > 3: # Avoid very short words
                 word_counts[token] = word_counts.get(token, 0) + 1
-        sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
+        sorted_words = sorted(word_counts.items(), key=lambda x: (-x[1], x[0]))
         for w, _ in sorted_words[:12]:
             found_keywords.add(w)
 
@@ -312,20 +361,17 @@ def get_matching_keywords(resume_text, job_desc_text):
     missing = []
     
     for kw in found_keywords:
-        if kw == "spring":
-            isPresent = has_spring_framework(resume_text)
-        else:
-            isPresent = is_fuzzy_match(kw, resume_cleaned, threshold=0.80)
+        isPresent = _keyword_present(kw, resume_text, resume_cleaned)
             
         category = "Other"
-        if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering"]:
+        if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering", "cloud computing"]:
             category = "Technical"
         elif kw in SOFT_SKILLS:
             category = "Soft Skills"
         elif kw in BUSINESS_SKILLS or kw in ["project management", "product management"]:
             category = "Business / Management"
             
-        item = {"keyword": kw, "category": category}
+        item = {"keyword": DISPLAY_NAMES.get(kw, kw), "category": category}
         if isPresent:
             matched.append(item)
         else:
@@ -340,19 +386,15 @@ def get_matching_keywords(resume_text, job_desc_text):
 
 def calculate_cosine_similarity(doc1_tokens, doc2_tokens):
     """Computes TF-IDF cosine similarity between two lists of tokens."""
-    vocab = set(doc1_tokens).union(set(doc2_tokens))
+    set1, set2 = set(doc1_tokens), set(doc2_tokens)
+    vocab = set1 | set2
     if not vocab:
         return 0.0
     
     # Document frequency (DF) across our 2 documents
     df = {}
     for word in vocab:
-        count = 0
-        if word in doc1_tokens:
-            count += 1
-        if word in doc2_tokens:
-            count += 1
-        df[word] = count
+        df[word] = (word in set1) + (word in set2)
     
     # Smooth IDF
     N = 2
@@ -388,6 +430,52 @@ def calculate_cosine_similarity(doc1_tokens, doc2_tokens):
         
     return dot_product / (norm_v1 * norm_v2)
 
+SECTION_HEADERS = {
+    "experience": ["experience", "employment", "work history", "professional background"],
+    "education": ["education", "academic background"],
+    "skills": ["skills", "technical skills", "core competencies", "technologies", "technical proficiencies"],
+    "projects": ["projects", "personal projects", "academic projects", "key projects"]
+}
+
+# Past-tense forms; matched with their stem so "develop", "developing" and "developed" all count
+ACTION_VERBS = [
+    "led", "developed", "designed", "implemented", "managed", "created", "optimized", "increased", "reduced",
+    "accomplished", "authored", "accelerated", "built", "spearheaded", "executed", "improved", "launched",
+    "formulated", "automated", "delivered", "collaborated", "analyzed", "architected", "deployed", "engineered",
+    "streamlined", "mentored", "migrated", "coordinated", "established", "generated", "achieved", "resolved",
+    "initiated", "maintained", "orchestrated", "tested", "trained"
+]
+_IRREGULAR_VERB_FORMS = {"led": r"led", "built": r"built|build|builds|building"}
+
+def _verb_pattern(past):
+    if past in _IRREGULAR_VERB_FORMS:
+        return _IRREGULAR_VERB_FORMS[past]
+    return re.escape(past[:-2]) + r'(?:ed|e|es|d|s|ing)'
+
+_VERB_PATTERNS = [(v, re.compile(r'\b(?:' + _verb_pattern(v) + r')\b')) for v in ACTION_VERBS]
+_METRIC_PATTERN = re.compile(
+    r'\$\s?\d[\d,]*(?:\.\d+)?\s?[kmb]?\b'        # $5k, $1.5M, $10,000
+    r'|\b\d+(?:\.\d+)?\s?%'                        # 35%
+    r'|\b\d+(?:\.\d+)?\s?x\b'                      # 3x
+    r'|\b\d+(?:\.\d+)?\s?[km]\+?(?![a-z])'         # 10k, 2M+
+    r'|\b\d{1,3}(?:,\d{3})+\+?'                    # 12,000
+    r'|\b\d+\+',                                    # 5+
+    re.IGNORECASE
+)
+
+_HEADER_QUALIFIERS = r'(?:(?:professional|work|relevant|technical|selected|key|additional|academic|personal|core|related|industry)\s+)?'
+
+def _is_header_line(line, synonyms):
+    """A header is a line that is just a section name (optionally 'Education & Training'), or a 'Skills: ...' lead-in."""
+    phrase = " ".join(re.sub(r'[^a-z&/ ]', ' ', line).split())
+    for syn in synonyms:
+        name = _HEADER_QUALIFIERS + re.escape(syn)
+        if re.fullmatch(name + r'(?:\s*[&/]\s*[a-z]+(?: [a-z]+)?)?', phrase):
+            return True
+        if re.match(name + r'\s*[:\-\u2013|]', line.strip()):
+            return True
+    return False
+
 def analyze_resume_structure(resume_text):
     """Analyzes resume layout, sections, formatting, and word density."""
     resume_lower = resume_text.lower()
@@ -396,39 +484,21 @@ def analyze_resume_structure(resume_text):
     words = resume_text.split()
     word_count = len(words)
     
-    # Look for standard headers
-    headers = {
-        "experience": ["experience", "employment", "work history", "professional background"],
-        "education": ["education", "academic background", "study"],
-        "skills": ["skills", "technical skills", "core competencies", "technologies"],
-        "projects": ["projects", "personal projects", "academic projects", "key projects"]
-    }
-    
+    # Section headers must sit on their own line; the word 'experience' inside a sentence is not a header
+    lines = [ln.strip() for ln in resume_lower.splitlines() if ln.strip()]
     found_headers = []
     missing_headers = []
-    for section, synonyms in headers.items():
-        found = False
-        for syn in synonyms:
-            # Look for headers on separate lines or with basic boundaries
-            if re.search(r'\b' + re.escape(syn) + r'\b', resume_lower):
-                found = True
-                break
-        if found:
+    for section, synonyms in SECTION_HEADERS.items():
+        if any(_is_header_line(ln, synonyms) for ln in lines):
             found_headers.append(section)
         else:
             missing_headers.append(section)
             
-    # Check for quantified impact (numbers or percentages)
-    # Find patterns like 20%, $10,000, 5+, etc.
-    numbers = re.findall(r'\b\d+(?:\.\d+)?%|\b\d+\+|\$\b\d+(?:,\d+)*', resume_text)
-    num_metrics = len(numbers)
+    # Quantified impact: percentages, currency, multipliers, k/M suffixes, large numbers, 5+
+    num_metrics = len(_METRIC_PATTERN.findall(resume_text))
     
-    # Check for strong resume action verbs
-    action_verbs = ["led", "developed", "designed", "implemented", "managed", "created", "optimized", "increased", "reduced", "accomplished", "authored", "accelerated", "built", "spearheaded", "executed", "improved", "launched", "formulated"]
-    found_verbs = []
-    for verb in action_verbs:
-        if re.search(r'\b' + re.escape(verb) + r'\b', resume_lower):
-            found_verbs.append(verb)
+    # Strong resume action verbs
+    found_verbs = [verb for verb, pat in _VERB_PATTERNS if pat.search(resume_lower)]
             
     return {
         "word_count": word_count,
@@ -443,17 +513,18 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
     if not cover_letter_text or not cover_letter_text.strip():
         return None
         
-    cl_lower = cover_letter_text.lower()
-    job_lower = job_desc_text.lower()
+    cl_lower = cover_letter_text.lower().strip()
     
     word_count = len(cover_letter_text.split())
     
     # Heuristics:
-    # 1. Look for recruiter greeting
-    has_greeting = any(sal in cl_lower for sal in ["dear", "hiring manager", "recruiter", "to whom it may concern", "attention"])
+    # 1. Look for recruiter greeting in the opening lines
+    opening = cl_lower[:200]
+    has_greeting = bool(re.search(r'\b(?:dear|hello|greetings|hiring manager|hiring team|recruiting team|to whom it may concern)\b', opening))
     
-    # 2. Check sign-off
-    has_signoff = any(so in cl_lower for so in ["sincerely", "best regards", "kind regards", "respectfully", "thank you"])
+    # 2. Check sign-off in the closing lines (a name may follow it)
+    closing = cl_lower[-150:]
+    has_signoff = bool(re.search(r'\b(?:sincerely|regards|respectfully|thank you|thanks|yours truly|cordially)\b', closing))
     
     # 3. Check for job description keyword alignment
     job_tokens = set(tokenize(job_desc_text))
