@@ -251,5 +251,28 @@ class TestAnalyzer(unittest.TestCase):
         matched, missing = get_matching_keywords("Python developer", "Plan C and Vitamin C and Python, Git, SQL, AWS, Docker")
         self.assertNotIn("c", [item["keyword"] for item in matched + missing])
 
+    def test_section_headers_must_be_headers(self):
+        resume = "Summary\nA developer with experience in skills training and a case study on projects.\nEducation\nBS CS"
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(struct["found_headers"], ["education"])
+        inline = analyze_resume_structure("SKILLS: Python, SQL\nWork Experience\nProjects")
+        self.assertEqual(inline["found_headers"], ["experience", "skills", "projects"])
+
+    def test_metrics_and_verbs(self):
+        resume = "Cut costs 30%, saved $1.5M, served 12,000 users, grew traffic 3x, handled 10k requests, 5+ clients. Automate builds; developing tools."
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(struct["metrics_count"], 6)
+        self.assertIn("automated", struct["action_verbs_found"])
+        self.assertIn("developed", struct["action_verbs_found"])
+
+    def test_cover_letter_greeting_and_signoff_position(self):
+        body = "I pay attention to detail and enjoy working with recruiters. " * 20
+        cl = analyze_cover_letter(body, "python")
+        self.assertFalse(cl["has_greeting"])
+        self.assertFalse(cl["has_signoff"])
+        cl = analyze_cover_letter("Dear Team,\n" + body + "\nBest regards,\nJo", "python")
+        self.assertTrue(cl["has_greeting"])
+        self.assertTrue(cl["has_signoff"])
+
 if __name__ == "__main__":
     unittest.main()

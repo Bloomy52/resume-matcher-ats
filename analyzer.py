@@ -415,6 +415,58 @@ def calculate_cosine_similarity(doc1_tokens, doc2_tokens):
         
     return dot_product / (norm_v1 * norm_v2)
 
+SECTION_HEADERS = {
+    "experience": ["experience", "employment", "work history", "professional background"],
+    "education": ["education", "academic background"],
+    "skills": ["skills", "technical skills", "core competencies", "technologies", "technical proficiencies"],
+    "projects": ["projects", "personal projects", "academic projects", "key projects"]
+}
+
+# Past-tense forms; matched with their stem so "develop", "developing" and "developed" all count
+ACTION_VERBS = [
+    "led", "developed", "designed", "implemented", "managed", "created", "optimized", "increased", "reduced",
+    "accomplished", "authored", "accelerated", "built", "spearheaded", "executed", "improved", "launched",
+    "formulated", "automated", "delivered", "collaborated", "analyzed", "architected", "deployed", "engineered",
+    "streamlined", "mentored", "migrated", "coordinated", "established", "generated", "achieved", "resolved",
+    "initiated", "maintained", "orchestrated", "tested", "trained"
+]
+_IRREGULAR_VERB_FORMS = {"led": r"led", "built": r"built|build|builds|building"}
+
+def _verb_pattern(past):
+    if past in _IRREGULAR_VERB_FORMS:
+        return _IRREGULAR_VERB_FORMS[past]
+    return re.escape(past[:-2]) + r'(?:ed|e|es|d|s|ing)'
+
+_VERB_PATTERNS = [(v, re.compile(r'\b(?:' + _verb_pattern(v) + r')\b')) for v in ACTION_VERBS]
+_HEADER_PATTERNS = {
+    section: [re.compile(r'\b' + re.escape(syn) + r'\b') for syn in synonyms]
+    for section, synonyms in SECTION_HEADERS.items()
+}
+_METRIC_PATTERN = re.compile(
+    r'\$\s?\d[\d,]*(?:\.\d+)?\s?[kmb]?\b'        # $5k, $1.5M, $10,000
+    r'|\b\d+(?:\.\d+)?\s?%'                        # 35%
+    r'|\b\d+(?:\.\d+)?\s?x\b'                      # 3x
+    r'|\b\d+(?:\.\d+)?\s?[km]\+?(?![a-z])'         # 10k, 2M+
+    r'|\b\d{1,3}(?:,\d{3})+\+?'                    # 12,000
+    r'|\b\d+\+',                                    # 5+
+    re.IGNORECASE
+)
+
+def _is_header_line(line, patterns):
+    """A section header is a short line naming the section, or 'Skills: ...' style lead-in."""
+    words = re.sub(r'[^a-z&/ ]', ' ', line).split()
+    if not words:
+        return False
+    for pat in patterns:
+        m = pat.search(line)
+        if not m:
+            continue
+        if len(words) <= 5:
+            return True
+        if re.match(r'\s*[:\-\u2013|]', line[m.end():]) and not line[:m.start()].strip():
+            return True
+    return False
+
 def analyze_resume_structure(resume_text):
     """Analyzes resume layout, sections, formatting, and word density."""
     resume_lower = resume_text.lower()
@@ -423,39 +475,21 @@ def analyze_resume_structure(resume_text):
     words = resume_text.split()
     word_count = len(words)
     
-    # Look for standard headers
-    headers = {
-        "experience": ["experience", "employment", "work history", "professional background"],
-        "education": ["education", "academic background", "study"],
-        "skills": ["skills", "technical skills", "core competencies", "technologies"],
-        "projects": ["projects", "personal projects", "academic projects", "key projects"]
-    }
-    
+    # Section headers must sit on their own line; the word 'experience' inside a sentence is not a header
+    lines = [ln.strip() for ln in resume_lower.splitlines() if ln.strip()]
     found_headers = []
     missing_headers = []
-    for section, synonyms in headers.items():
-        found = False
-        for syn in synonyms:
-            # Look for headers on separate lines or with basic boundaries
-            if re.search(r'\b' + re.escape(syn) + r'\b', resume_lower):
-                found = True
-                break
-        if found:
+    for section, patterns in _HEADER_PATTERNS.items():
+        if any(_is_header_line(ln, patterns) for ln in lines):
             found_headers.append(section)
         else:
             missing_headers.append(section)
             
-    # Check for quantified impact (numbers or percentages)
-    # Find patterns like 20%, $10,000, 5+, etc.
-    numbers = re.findall(r'\b\d+(?:\.\d+)?%|\b\d+\+|\$\b\d+(?:,\d+)*', resume_text)
-    num_metrics = len(numbers)
+    # Quantified impact: percentages, currency, multipliers, k/M suffixes, large numbers, 5+
+    num_metrics = len(_METRIC_PATTERN.findall(resume_text))
     
-    # Check for strong resume action verbs
-    action_verbs = ["led", "developed", "designed", "implemented", "managed", "created", "optimized", "increased", "reduced", "accomplished", "authored", "accelerated", "built", "spearheaded", "executed", "improved", "launched", "formulated"]
-    found_verbs = []
-    for verb in action_verbs:
-        if re.search(r'\b' + re.escape(verb) + r'\b', resume_lower):
-            found_verbs.append(verb)
+    # Strong resume action verbs
+    found_verbs = [verb for verb, pat in _VERB_PATTERNS if pat.search(resume_lower)]
             
     return {
         "word_count": word_count,
@@ -470,17 +504,18 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
     if not cover_letter_text or not cover_letter_text.strip():
         return None
         
-    cl_lower = cover_letter_text.lower()
-    job_lower = job_desc_text.lower()
+    cl_lower = cover_letter_text.lower().strip()
     
     word_count = len(cover_letter_text.split())
     
     # Heuristics:
-    # 1. Look for recruiter greeting
-    has_greeting = any(sal in cl_lower for sal in ["dear", "hiring manager", "recruiter", "to whom it may concern", "attention"])
+    # 1. Look for recruiter greeting in the opening lines
+    opening = cl_lower[:200]
+    has_greeting = any(sal in opening for sal in ["dear", "hello", "greetings", "hiring manager", "hiring team", "recruiting team", "to whom it may concern"])
     
-    # 2. Check sign-off
-    has_signoff = any(so in cl_lower for so in ["sincerely", "best regards", "kind regards", "respectfully", "thank you"])
+    # 2. Check sign-off in the closing lines (a name may follow it)
+    closing = cl_lower[-150:]
+    has_signoff = any(so in closing for so in ["sincerely", "best regards", "kind regards", "warm regards", "regards", "respectfully", "thank you", "thanks", "yours truly", "cordially"])
     
     # 3. Check for job description keyword alignment
     job_tokens = set(tokenize(job_desc_text))
