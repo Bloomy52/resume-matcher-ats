@@ -312,5 +312,11 @@ class TestAnalyzer(unittest.TestCase):
         cl = analyze_cover_letter("I am dearly interested in this role. " * 30, "python")
         self.assertFalse(cl["has_greeting"])
 
+    def test_restful_matches_rest(self):
+        matched, missing = get_matching_keywords("Python Java SQL Docker. Developed RESTful APIs.", "Python Java REST SQL Docker")
+        self.assertIn("rest", [item["keyword"] for item in matched])
+        matched, missing = get_matching_keywords("Python Java SQL Docker.", "Python Java RESTful SQL Docker")
+        self.assertIn("rest", [item["keyword"] for item in missing])
+
 if __name__ == "__main__":
     unittest.main()

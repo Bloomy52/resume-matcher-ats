@@ -84,7 +84,7 @@ ALIASES = {
     "js": "javascript", "ts": "typescript", "k8s": "kubernetes", "postgres": "postgresql",
     "golang": "go", "nodejs": "node", "reactjs": "react", "vuejs": "vue", "angularjs": "angular",
     "expressjs": "express", "mongo": "mongodb", "scikit": "scikit-learn", "sklearn": "scikit-learn",
-    "continuous-integration": "cicd",
+    "continuous-integration": "cicd", "restful": "rest",
 }
 
 # Internal keyword -> how it is shown to the user
