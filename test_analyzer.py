@@ -229,5 +229,27 @@ class TestAnalyzer(unittest.TestCase):
         self.assertNotIn("class", all_extracted)
         self.assertNotIn("2024", all_extracted)
 
+    def test_keywords_match_whole_words_only(self):
+        job = "Requires Java, Go, Rust, REST, Git and SQL."
+        resume = "JavaScript developer at a digital restaurant group. Good at trust and MySQL."
+        matched, missing = get_matching_keywords(resume, job)
+        matched_words = [item["keyword"] for item in matched]
+        for kw in ("java", "go", "rust", "rest", "git", "sql"):
+            self.assertNotIn(kw, matched_words)
+            self.assertIn(kw, [item["keyword"] for item in missing])
+
+    def test_keyword_aliases_and_special_tokens(self):
+        job = "We use C, C++, .NET, CI/CD, Kubernetes, PostgreSQL, JavaScript and problem solving."
+        resume = "Wrote C and C++ services on .NET. Built CI/CD with k8s and Postgres. Strong JS and problem-solving."
+        matched, missing = get_matching_keywords(resume, job)
+        matched_words = [item["keyword"] for item in matched]
+        for kw in ("c", "c++", ".net", "ci/cd", "kubernetes", "postgresql", "javascript", "problem-solving"):
+            self.assertIn(kw, matched_words)
+        self.assertEqual(missing, [])
+
+    def test_c_language_not_confused_with_other_c(self):
+        matched, missing = get_matching_keywords("Python developer", "Plan C and Vitamin C and Python, Git, SQL, AWS, Docker")
+        self.assertNotIn("c", [item["keyword"] for item in matched + missing])
+
 if __name__ == "__main__":
     unittest.main()

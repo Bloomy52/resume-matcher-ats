@@ -72,11 +72,27 @@ TECH_SKILLS = {
     "react", "angular", "vue", "nextjs", "node", "express", "django", "flask", "fastapi", "spring", "rails",
     "html", "css", "tailwind", "sass", "bootstrap", "jquery",
     "sql", "mysql", "postgresql", "sqlite", "mongodb", "redis", "dynamodb", "nosql", "database", "oracle",
-    "git", "github", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "ci/cd", "devops", "terraform",
+    "git", "github", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "cicd", "devops", "terraform",
     "linux", "bash", "unix", "raspberry", "arduino", "embedded", "c",
     "rest", "graphql", "api", "microservices", "serverless", "soap",
     "tensorflow", "pytorch", "keras", "numpy", "pandas", "scipy", "scikit-learn", "matplotlib", "seaborn",
-    "scrum", "agile", "jira", "confluence", "trello", "gitlabs"
+    "scrum", "agile", "jira", "confluence", "trello", "gitlab", "dotnet"
+}
+
+# Spelling variants a resume may use for a skill. Maps variant -> canonical keyword.
+ALIASES = {
+    "js": "javascript", "ts": "typescript", "k8s": "kubernetes", "postgres": "postgresql",
+    "golang": "go", "nodejs": "node", "reactjs": "react", "vuejs": "vue", "angularjs": "angular",
+    "expressjs": "express", "mongo": "mongodb", "scikit": "scikit-learn", "sklearn": "scikit-learn",
+    "continuous-integration": "cicd",
+}
+
+# Internal keyword -> how it is shown to the user
+DISPLAY_NAMES = {"cpp": "c++", "csharp": "c#", "dotnet": ".net", "cicd": "ci/cd"}
+
+MULTI_WORD_SKILLS = {
+    "machine learning", "data science", "web development", "software engineering",
+    "project management", "product management", "cloud computing"
 }
 
 SOFT_SKILLS = {
@@ -150,7 +166,8 @@ def clean_and_normalize(text):
     text = text.replace("c++", "cpp")
     text = text.replace("c#", "csharp")
     text = text.replace(".net", "dotnet")
-    text = text.replace("node.js", "nodejs")
+    text = re.sub(r'\b([a-z]+)\.js\b', r'\1js', text)  # node.js -> nodejs, react.js -> reactjs
+    text = re.sub(r'\bci\s*/\s*cd\b', 'cicd', text)
     return text
 
 def has_spring_framework(text):
@@ -237,39 +254,49 @@ def get_ngrams(tokens, n=2):
         ngrams.append(" ".join(tokens[i:i+n]))
     return ngrams
 
+def _phrase_pattern(keyword):
+    """Regex for a keyword on word boundaries; spaces/hyphens are interchangeable, plurals allowed."""
+    parts = [re.escape(p) for p in re.split(r'[\s-]+', keyword) if p]
+    return r'(?<![a-z0-9])' + r'[\s-]+'.join(parts) + r'(?:e?s)?(?![a-z0-9])'
+
 def is_fuzzy_match(keyword, text, threshold=0.85):
     """
-    Checks if a keyword has a fuzzy match in the text.
-    First uses a fast-path substring check. If not found, falls back
-    to comparing candidate words/phrases using SequenceMatcher.
+    Checks if a keyword appears in the text as a whole word/phrase (never as a piece of a
+    longer word, so 'java' does not match 'javascript'). Longer single-word keywords also
+    tolerate small typos, e.g. 'pyhton' for 'python'.
     """
     if not keyword or not text:
         return False
-        
-    # Fast path: exact string inclusion
-    if keyword in text:
+
+    if re.search(_phrase_pattern(keyword), text):
         return True
-        
-    # Tokenize the text and strip punctuation to run local sequence matching
-    raw_words = text.split()
-    words = [re.sub(r'[^\w\s-]', '', w) for w in raw_words]
-    words = [w for w in words if w]
-    
-    kw_words = keyword.split()
-    n = len(kw_words)
-    
-    if n == 0 or len(words) < n:
+
+    # Typo tolerance only for long single words: short ones ('react'/'reach') collide too easily
+    if len(keyword) < 6 or not re.fullmatch(r'[a-z]+', keyword):
         return False
-        
-    # Slide a window of size 'n' across the text
-    for i in range(len(words) - n + 1):
-        phrase = " ".join(words[i:i+n])
-        # Calculate ratio
-        ratio = SequenceMatcher(None, phrase, keyword).ratio()
-        if ratio >= threshold:
+    for word in set(re.findall(r'[a-z]+', text)):
+        if (word[0] == keyword[0] and abs(len(word) - len(keyword)) <= 1
+                and SequenceMatcher(None, word, keyword).ratio() >= threshold):
             return True
-            
     return False
+
+def has_c_language(text):
+    """True if the standalone language 'C' appears (tokenize drops 1-letter words)."""
+    for m in re.finditer(r'(?<![\w+#./-])C(?![\w+#-]|\.\w)', text):
+        before = text[max(0, m.start() - 12):m.start()].lower()
+        if not re.search(r'(?:vitamin|plan|class|grade|option|type|hepatitis)\s*$', before):
+            return True
+    return False
+
+def _keyword_present(kw, resume_text, resume_cleaned):
+    if kw == "spring":
+        return has_spring_framework(resume_text)
+    if kw == "c":
+        return has_c_language(resume_text)
+    if is_fuzzy_match(kw, resume_cleaned, threshold=0.80):
+        return True
+    return any(re.search(_phrase_pattern(alias), resume_cleaned)
+               for alias, canon in ALIASES.items() if canon == kw)
 
 def get_matching_keywords(resume_text, job_desc_text):
     """
@@ -277,34 +304,37 @@ def get_matching_keywords(resume_text, job_desc_text):
     Returns categorized lists of matched and missing keywords.
     """
     resume_cleaned = clean_and_normalize(resume_text)
-    job_cleaned = clean_and_normalize(job_desc_text)
     
-    job_tokens = tokenize(job_desc_text)
+    job_tokens = [ALIASES.get(t, t) for t in tokenize(job_desc_text)]
     job_bigrams = get_ngrams(job_tokens, 2)
+    all_dict_skills = TECH_SKILLS | SOFT_SKILLS | BUSINESS_SKILLS
     
     # Identify skills from our dictionary present in the Job Description
     found_keywords = set()
     
-    # Check single-word skills
     for token in set(job_tokens):
-        if token in TECH_SKILLS or token in SOFT_SKILLS or token in BUSINESS_SKILLS:
+        if token in all_dict_skills:
             found_keywords.add(token)
             
-    # Check bi-gram skills (e.g. "product management", "soft skills")
-    all_dict_skills = TECH_SKILLS.union(SOFT_SKILLS).union(BUSINESS_SKILLS)
+    # Multi-word skills; "problem solving" and "problem-solving" are the same skill
     for bigram in set(job_bigrams):
-        # We also add common multi-word skills manually if not in list
-        if bigram in all_dict_skills or bigram in ["machine learning", "data science", "web development", "software engineering", "project management", "product management", "cloud computing"]:
+        hyphenated = bigram.replace(" ", "-")
+        if bigram in MULTI_WORD_SKILLS:
             found_keywords.add(bigram)
+        elif hyphenated in all_dict_skills:
+            found_keywords.add(hyphenated)
+
+    # 'C' is a single letter, which tokenize() drops
+    if has_c_language(job_desc_text):
+        found_keywords.add("c")
             
     # If no standard skills found, fallback to high frequency words in job description
     if len(found_keywords) < 5:
-        # Find top 15 words in job description that are not stopwords
         word_counts = {}
         for token in job_tokens:
             if len(token) > 3: # Avoid very short words
                 word_counts[token] = word_counts.get(token, 0) + 1
-        sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
+        sorted_words = sorted(word_counts.items(), key=lambda x: (-x[1], x[0]))
         for w, _ in sorted_words[:12]:
             found_keywords.add(w)
 
@@ -312,20 +342,17 @@ def get_matching_keywords(resume_text, job_desc_text):
     missing = []
     
     for kw in found_keywords:
-        if kw == "spring":
-            isPresent = has_spring_framework(resume_text)
-        else:
-            isPresent = is_fuzzy_match(kw, resume_cleaned, threshold=0.80)
+        isPresent = _keyword_present(kw, resume_text, resume_cleaned)
             
         category = "Other"
-        if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering"]:
+        if kw in TECH_SKILLS or kw in ["machine learning", "data science", "web development", "software engineering", "cloud computing"]:
             category = "Technical"
         elif kw in SOFT_SKILLS:
             category = "Soft Skills"
         elif kw in BUSINESS_SKILLS or kw in ["project management", "product management"]:
             category = "Business / Management"
             
-        item = {"keyword": kw, "category": category}
+        item = {"keyword": DISPLAY_NAMES.get(kw, kw), "category": category}
         if isPresent:
             matched.append(item)
         else:
