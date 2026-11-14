@@ -12,7 +12,8 @@ from analyzer import (
     analyze_resume_structure,
     analyze_cover_letter,
     get_ats_analysis,
-    has_spring_framework
+    has_spring_framework,
+    extract_text_from_docx
 )
 
 class TestAnalyzer(unittest.TestCase):
@@ -273,6 +274,20 @@ class TestAnalyzer(unittest.TestCase):
         cl = analyze_cover_letter("Dear Team,\n" + body + "\nBest regards,\nJo", "python")
         self.assertTrue(cl["has_greeting"])
         self.assertTrue(cl["has_signoff"])
+
+    def test_docx_extraction_includes_tables_in_order(self):
+        import io
+        from docx import Document
+        doc = Document()
+        doc.add_paragraph("Jane Doe")
+        table = doc.add_table(rows=1, cols=2)
+        table.rows[0].cells[0].text = "Skills"
+        table.rows[0].cells[1].text = "Python, SQL"
+        doc.add_paragraph("Education")
+        buf = io.BytesIO()
+        doc.save(buf)
+        text = extract_text_from_docx(buf.getvalue())
+        self.assertEqual(text.splitlines(), ["Jane Doe", "Skills", "Python, SQL", "Education"])
 
 if __name__ == "__main__":
     unittest.main()

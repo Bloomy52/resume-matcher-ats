@@ -111,25 +111,35 @@ def extract_text_from_pdf(pdf_bytes):
     """Extracts text from PDF bytes using pypdf. Returns empty string on error."""
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
-        text = ""
+        parts = []
         for page in reader.pages:
             extracted = page.extract_text()
             if extracted:
-                text += extracted + "\n"
-        return text.strip()
+                parts.append(extracted)
+        return "\n".join(parts).strip()
     except Exception as e:
         print(f"Error extracting PDF: {e}")
         return ""
 
 def extract_text_from_docx(docx_bytes):
-    """Extracts text from DOCX bytes using python-docx. Returns empty string on error."""
+    """Extracts text from DOCX bytes (paragraphs and tables, in document order). Returns empty string on error."""
     try:
         doc = Document(io.BytesIO(docx_bytes))
-        text = ""
-        for para in doc.paragraphs:
-            if para.text:
-                text += para.text + "\n"
-        return text.strip()
+        lines = []
+        for block in doc.iter_inner_content():
+            if hasattr(block, "rows"):
+                # Many resume templates keep skills/experience in tables; merged cells repeat, so de-duplicate per row
+                for row in block.rows:
+                    seen = []
+                    for cell in row.cells:
+                        text = cell.text.strip()
+                        if text and text not in seen:
+                            seen.append(text)
+                    if seen:
+                        lines.append("\n".join(seen))
+            elif block.text:
+                lines.append(block.text)
+        return "\n".join(lines).strip()
     except Exception as e:
         print(f"Error extracting DOCX: {e}")
         return ""
@@ -367,19 +377,15 @@ def get_matching_keywords(resume_text, job_desc_text):
 
 def calculate_cosine_similarity(doc1_tokens, doc2_tokens):
     """Computes TF-IDF cosine similarity between two lists of tokens."""
-    vocab = set(doc1_tokens).union(set(doc2_tokens))
+    set1, set2 = set(doc1_tokens), set(doc2_tokens)
+    vocab = set1 | set2
     if not vocab:
         return 0.0
     
     # Document frequency (DF) across our 2 documents
     df = {}
     for word in vocab:
-        count = 0
-        if word in doc1_tokens:
-            count += 1
-        if word in doc2_tokens:
-            count += 1
-        df[word] = count
+        df[word] = (word in set1) + (word in set2)
     
     # Smooth IDF
     N = 2
