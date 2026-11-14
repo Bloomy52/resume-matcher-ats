@@ -290,13 +290,22 @@ def is_fuzzy_match(keyword, text, threshold=0.85):
             return True
     return False
 
+_C_CONTEXT = r'(?:programming|language|developers?|engineers?|code|coding)\b'
+
 def has_c_language(text):
-    """True if the standalone language 'C' appears (tokenize drops 1-letter words)."""
+    """
+    True if the standalone language 'C' appears (tokenize drops 1-letter words).
+    Uppercase 'C' counts unless it is a label like 'Plan C'. Lowercase 'c' is ambiguous
+    ('c)' list markers) so it only counts in context: 'c developer', 'c/c++', 'c and c++'.
+    """
     for m in re.finditer(r'(?<![\w+#./-])C(?![\w+#-]|\.\w)', text):
         before = text[max(0, m.start() - 12):m.start()].lower()
         if not re.search(r'(?:vitamin|plan|class|grade|option|type|hepatitis)\s*$', before):
             return True
-    return False
+    lowered = text.lower()
+    return bool(re.search(r'(?<![\w+#./-])c\s+' + _C_CONTEXT, lowered)
+                or re.search(r'(?<![\w+#./-])c\s*(?:/|,|and|&)\s*c\+\+', lowered)
+                or re.search(r'c\+\+\s*(?:/|,|and|&)\s*c(?![\w+#-])', lowered))
 
 def _keyword_present(kw, resume_text, resume_cleaned):
     if kw == "spring":
@@ -328,7 +337,7 @@ def get_matching_keywords(resume_text, job_desc_text):
             
     # Multi-word skills; "problem solving" and "problem-solving" are the same skill
     for bigram in set(job_bigrams):
-        hyphenated = bigram.replace(" ", "-")
+        hyphenated = ALIASES.get(bigram.replace(" ", "-"), bigram.replace(" ", "-"))
         if bigram in MULTI_WORD_SKILLS:
             found_keywords.add(bigram)
         elif hyphenated in all_dict_skills:
@@ -444,10 +453,6 @@ def _verb_pattern(past):
     return re.escape(past[:-2]) + r'(?:ed|e|es|d|s|ing)'
 
 _VERB_PATTERNS = [(v, re.compile(r'\b(?:' + _verb_pattern(v) + r')\b')) for v in ACTION_VERBS]
-_HEADER_PATTERNS = {
-    section: [re.compile(r'\b' + re.escape(syn) + r'\b') for syn in synonyms]
-    for section, synonyms in SECTION_HEADERS.items()
-}
 _METRIC_PATTERN = re.compile(
     r'\$\s?\d[\d,]*(?:\.\d+)?\s?[kmb]?\b'        # $5k, $1.5M, $10,000
     r'|\b\d+(?:\.\d+)?\s?%'                        # 35%
@@ -458,18 +463,16 @@ _METRIC_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-def _is_header_line(line, patterns):
-    """A section header is a short line naming the section, or 'Skills: ...' style lead-in."""
-    words = re.sub(r'[^a-z&/ ]', ' ', line).split()
-    if not words:
-        return False
-    for pat in patterns:
-        m = pat.search(line)
-        if not m:
-            continue
-        if len(words) <= 5:
+_HEADER_QUALIFIERS = r'(?:(?:professional|work|relevant|technical|selected|key|additional|academic|personal|core|related|industry)\s+)?'
+
+def _is_header_line(line, synonyms):
+    """A header is a line that is just a section name (optionally 'Education & Training'), or a 'Skills: ...' lead-in."""
+    phrase = " ".join(re.sub(r'[^a-z&/ ]', ' ', line).split())
+    for syn in synonyms:
+        name = _HEADER_QUALIFIERS + re.escape(syn)
+        if re.fullmatch(name + r'(?:\s*[&/]\s*[a-z]+(?: [a-z]+)?)?', phrase):
             return True
-        if re.match(r'\s*[:\-\u2013|]', line[m.end():]) and not line[:m.start()].strip():
+        if re.match(name + r'\s*[:\-\u2013|]', line.strip()):
             return True
     return False
 
@@ -485,8 +488,8 @@ def analyze_resume_structure(resume_text):
     lines = [ln.strip() for ln in resume_lower.splitlines() if ln.strip()]
     found_headers = []
     missing_headers = []
-    for section, patterns in _HEADER_PATTERNS.items():
-        if any(_is_header_line(ln, patterns) for ln in lines):
+    for section, synonyms in SECTION_HEADERS.items():
+        if any(_is_header_line(ln, synonyms) for ln in lines):
             found_headers.append(section)
         else:
             missing_headers.append(section)
@@ -517,11 +520,11 @@ def analyze_cover_letter(cover_letter_text, job_desc_text):
     # Heuristics:
     # 1. Look for recruiter greeting in the opening lines
     opening = cl_lower[:200]
-    has_greeting = any(sal in opening for sal in ["dear", "hello", "greetings", "hiring manager", "hiring team", "recruiting team", "to whom it may concern"])
+    has_greeting = bool(re.search(r'\b(?:dear|hello|greetings|hiring manager|hiring team|recruiting team|to whom it may concern)\b', opening))
     
     # 2. Check sign-off in the closing lines (a name may follow it)
     closing = cl_lower[-150:]
-    has_signoff = any(so in closing for so in ["sincerely", "best regards", "kind regards", "warm regards", "regards", "respectfully", "thank you", "thanks", "yours truly", "cordially"])
+    has_signoff = bool(re.search(r'\b(?:sincerely|regards|respectfully|thank you|thanks|yours truly|cordially)\b', closing))
     
     # 3. Check for job description keyword alignment
     job_tokens = set(tokenize(job_desc_text))

@@ -13,7 +13,8 @@ from analyzer import (
     analyze_cover_letter,
     get_ats_analysis,
     has_spring_framework,
-    extract_text_from_docx
+    extract_text_from_docx,
+    has_c_language
 )
 
 class TestAnalyzer(unittest.TestCase):
@@ -288,6 +289,28 @@ class TestAnalyzer(unittest.TestCase):
         doc.save(buf)
         text = extract_text_from_docx(buf.getvalue())
         self.assertEqual(text.splitlines(), ["Jane Doe", "Skills", "Python, SQL", "Education"])
+
+    def test_c_language_lowercase_only_in_context(self):
+        self.assertTrue(has_c_language("Experienced c developer"))
+        self.assertTrue(has_c_language("systems work in c/c++"))
+        self.assertTrue(has_c_language("knows C++ and c"))
+        self.assertFalse(has_c_language("options: a) red b) blue c) green"))
+        self.assertFalse(has_c_language("Plan C and vitamin c"))
+
+    def test_continuous_integration_alias(self):
+        matched, missing = get_matching_keywords("Maintained CI/CD pipelines", "Experience with continuous integration required.")
+        self.assertIn("ci/cd", [item["keyword"] for item in matched])
+
+    def test_short_lines_are_not_headers(self):
+        resume = "5 years of experience\nExperience with Python\nStrong skills\nEducation & Training\nProfessional Experience:"
+        struct = analyze_resume_structure(resume)
+        self.assertEqual(sorted(struct["found_headers"]), ["education", "experience"])
+        none = analyze_resume_structure("5 years of experience\nExperience with Python\nStrong skills")
+        self.assertEqual(none["found_headers"], [])
+
+    def test_greeting_needs_whole_word(self):
+        cl = analyze_cover_letter("I am dearly interested in this role. " * 30, "python")
+        self.assertFalse(cl["has_greeting"])
 
 if __name__ == "__main__":
     unittest.main()
