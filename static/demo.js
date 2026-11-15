@@ -105,6 +105,26 @@ const elements = {
     resCandidateParser: document.getElementById('res-candidate-parser')
 };
 
+// Backend: talks to the Flask demo server by default. The static
+// GitHub Pages build sets window.DEMO_BACKEND to run the analysis in-browser.
+const demoBackend = window.DEMO_BACKEND || {
+    async analyze(formData) {
+        const response = await fetch(window.API_ROUTES.analyze, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || "An unknown error occurred during scanning");
+        }
+        return data;
+    },
+    async reset() {
+        await fetch(window.API_ROUTES.reset, { method: 'POST' });
+    }
+};
+
 // Event Listeners on Load
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
@@ -280,7 +300,7 @@ function fillTemplate(key) {
 // Reset Demo
 async function resetToScanForm() {
     try {
-        await fetch(window.API_ROUTES.reset, { method: 'POST' });
+        await demoBackend.reset();
     } catch (error) {
         console.error("Error resetting demo session:", error);
     } finally {
@@ -305,17 +325,7 @@ async function handleScanSubmit(e) {
     const formData = new FormData(elements.formScan);
 
     try {
-        const response = await fetch(window.API_ROUTES.analyze, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || "An unknown error occurred during scanning");
-        }
-
-        const data = await response.json();
+        const data = await demoBackend.analyze(formData);
 
         // Reset Form Files
         elements.inputResume.value = '';

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 import os
-import re
 import json
 import secrets
 import shutil
@@ -13,7 +12,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template, session
 from werkzeug.utils import secure_filename
 
-from analyzer import get_ats_analysis, extract_text_from_pdf, extract_text_from_docx
+from demo_core import run_demo_analysis
 
 app = Flask(__name__)
 
@@ -21,9 +20,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
 
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
-
-ALLOWED_EXTENSIONS = {'pdf', 'docx'}
-MAX_EXTRACTED_TEXT_CHARS = 50000
 
 DEMO_STORAGE_DIR = Path('/tmp/resume-matcher-demo')
 DEMO_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
@@ -41,13 +37,6 @@ def get_app_version():
 
 
 APP_VERSION = get_app_version()
-
-def allowed_file(filename):
-    if not filename or '.' not in filename:
-        return False
-    ext = filename.rsplit('.', 1)[1].lower()
-    return ext in ALLOWED_EXTENSIONS
-
 
 def get_demo_session_dir(demo_id):
     """Returns the Path for a given demo_id's storage dir."""
@@ -87,43 +76,6 @@ def save_demo_results(analysis, candidate_name, candidate_email, candidate_phone
     return demo_id
 
 
-def extract_candidate_info(resume_text):
-    """Extracts basic candidate info (name, email, phone) from resume text."""
-    email_match = re.search(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b', resume_text)
-    email = email_match.group(0) if email_match else "unknown@example.com"
-
-    phone_match = re.search(r'\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b', resume_text)
-    phone = phone_match.group(0) if phone_match else "N/A"
-
-    lines = [line.strip() for line in resume_text.split('\n') if line.strip()]
-    name = "Unknown Candidate"
-    if lines:
-        for line in lines[:5]:
-            if len(line) < 40 and not any(k in line.lower() for k in ["resume", "cv", "email", "phone", "http", "@", "+"]):
-                name = line
-                break
-
-    return name, email, phone
-
-
-def extract_text_from_upload(file):
-    """Extracts text from an uploaded PDF or DOCX file."""
-    filename = file.filename.lower()
-    file_bytes = file.read()
-
-    if filename.endswith('.pdf'):
-        text = extract_text_from_pdf(file_bytes)
-    elif filename.endswith('.docx'):
-        text = extract_text_from_docx(file_bytes)
-    else:
-        return ""
-
-    if text and len(text) > MAX_EXTRACTED_TEXT_CHARS:
-        text = text[:MAX_EXTRACTED_TEXT_CHARS]
-
-    return text
-
-
 @app.route('/')
 def index():
     sys_name = platform.system()
@@ -145,31 +97,15 @@ def demo_analyze():
         return jsonify({"error": "Resume file is required"}), 400
 
     resume_file = request.files['resume']
-    if not allowed_file(resume_file.filename):
-        return jsonify({"error": "Only PDF and DOCX files are supported in the demo."}), 400
-
-    job_desc = request.form.get('job_description', '').strip()
-    if not job_desc:
-        return jsonify({"error": "Job description is required"}), 400
-
-    job_title = request.form.get('job_title', '').strip()
-    if not job_title:
-        job_lines = [l.strip() for l in job_desc.split('\n') if l.strip()]
-        job_title = job_lines[0][:50] if job_lines else "Target Job Position"
-
-    resume_text = extract_text_from_upload(resume_file)
-    if not resume_text:
-        return jsonify({"error": "Failed to parse resume text. Please upload a valid PDF or DOCX file."}), 400
-
-    analysis = get_ats_analysis(resume_text, job_desc, cover_letter_text=None, parser_mode='local')
-    if "error" in analysis:
-        return jsonify(analysis), 400
-
-    candidate_name, candidate_email, candidate_phone = extract_candidate_info(resume_text)
-
-    req_name = request.form.get('candidate_name', '').strip()
-    if req_name:
-        candidate_name = req_name
+    response_data, status = run_demo_analysis(
+        resume_file.filename,
+        resume_file.read(),
+        request.form.get('job_description', ''),
+        request.form.get('job_title', ''),
+        request.form.get('candidate_name', ''),
+    )
+    if status != 200:
+        return jsonify(response_data), status
 
     # Clean up any previous demo session tied to this browser session
     # before starting a new one.
@@ -177,16 +113,13 @@ def demo_analyze():
     if old_demo_id:
         delete_demo_session(old_demo_id)
 
-    save_demo_results(analysis, candidate_name, candidate_email, candidate_phone, job_title)
-
-    response_data = {
-        "candidate_id": None,
-        "candidate_name": candidate_name,
-        "candidate_email": candidate_email,
-        "candidate_phone": candidate_phone,
-        "job_title": job_title,
-        "analysis": analysis
-    }
+    save_demo_results(
+        response_data["analysis"],
+        response_data["candidate_name"],
+        response_data["candidate_email"],
+        response_data["candidate_phone"],
+        response_data["job_title"],
+    )
 
     return jsonify(response_data)
 
