@@ -29,7 +29,9 @@ Key capabilities include:
 ---
 
 ## Demo Mode
-Don't want to set this up? Look no further than the live Demo Mode! You can check it out at the following link: [https://resume-matcher-ats-hxg7.onrender.com](https://resume-matcher-ats-hxg7.onrender.com)
+Don't want to set this up? Look no further than the live Demo Mode! You can check it out at the following link: [https://bloomy52.github.io/resume-matcher-ats/](https://bloomy52.github.io/resume-matcher-ats/)
+
+The demo runs entirely in your browser. The Python analyzer is executed with [Pyodide](https://pyodide.org) (WebAssembly) inside a Web Worker, so there is no server to wake up and your resume is never uploaded anywhere. The first visit downloads the Pyodide engine (roughly 10-15 MB, cached afterwards) from the jsDelivr CDN, which takes a few seconds.
 
 But... There are some limitations that you should be aware of:
 1. **No Cover Letters.** You can only upload resumes in the Demo Mode.
@@ -39,9 +41,7 @@ But... There are some limitations that you should be aware of:
 
 If you don't want to deal with those limitations, follow the instructions below to host the app locally on your Raspberry Pi (or computer, idgaf what device you choose).
 
-P.S. The demo is hosted on Render's free tier which means that the instance does spin down if it is unused for a while. 
-The demo will automatically start up when you request the page, but it will take a little bit of time for it to boot up.
-Please be patient if the demo does load. I am not spending money on a demo server that is not going to get used. 
+To build the demo locally, run `python pages/build.py` and serve the generated `_site/` folder with any static file server (for example `python -m http.server -d _site`). To smoke test the build under Pyodide, run `npm ci && npm test` inside `pages/`.
 
 ---
 
@@ -160,9 +160,16 @@ This project uses a custom NLP algorithm to analyze your resumes and cover lette
 ├── README.md               # Overview for the repository
 ├── requirements.txt        # Python package requirements
 ├── systemd_setup.md        # Instructions for how to set up a systemd service for the WSGI server
+├── demo_core.py            # Framework-free demo logic shared by the Flask and in-browser demos
 ├── test_analyzer.py        # Comprehensive unit tests for all parser/analyzer functions
 ├── pyproject.toml          # Python packaging configuration
 ├── uv.lock                 # Lock file for uv server
+├── pages/
+│   ├── build.py            # Builds the static GitHub Pages demo into _site/
+│   ├── bridge.py           # Python entry point called from the Pyodide worker
+│   ├── engine.js           # Main-thread client that replaces the Flask API
+│   ├── worker.js           # Web Worker that runs Pyodide and the analyzer
+│   └── smoke.test.mjs      # Runs a real PDF and DOCX through the built site under Pyodide
 ├── static/
 │   ├── app.js              # Client-side UI renderer, API interactions, and chart renderers
 │   ├── demo.js             # Demo version of app.js
